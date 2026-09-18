@@ -169,7 +169,7 @@ function CounterRow({ label, detail, remaining, action }: CounterRowProps) {
       {remaining > 0 && remaining <= MAX_DOTS && (
         <div aria-hidden className="mt-3 flex flex-wrap gap-1.5">
           {Array.from({ length: remaining }, (_, i) => (
-            <span key={i} className="size-1.5 rounded-full bg-ink/70" />
+            <span key={i} className="size-1.5 rounded-full bg-ink" />
           ))}
         </div>
       )}

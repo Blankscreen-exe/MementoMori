@@ -70,8 +70,7 @@ export function Hourglass({
     if (!canvas || !ctx) return
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const darkMode = window.matchMedia('(prefers-color-scheme: dark)')
-    let palette = readPalette()
+    const palette = readPalette()
     let width = 0
     let height = 0
     let glass = createGlass(1, 1)
@@ -138,10 +137,6 @@ export function Hourglass({
         start()
       }
     }
-    const onColorScheme = () => {
-      palette = readPalette()
-      render()
-    }
     const onVisibility = () => (document.hidden ? stop() : start())
 
     redraw.current = () => {
@@ -151,7 +146,6 @@ export function Hourglass({
     const observer = new ResizeObserver(resize)
     observer.observe(canvas)
     reducedMotion.addEventListener('change', onMotionPreference)
-    darkMode.addEventListener('change', onColorScheme)
     document.addEventListener('visibilitychange', onVisibility)
     resize()
     start()
@@ -160,7 +154,6 @@ export function Hourglass({
       stop()
       observer.disconnect()
       reducedMotion.removeEventListener('change', onMotionPreference)
-      darkMode.removeEventListener('change', onColorScheme)
       document.removeEventListener('visibilitychange', onVisibility)
       redraw.current = () => {}
     }
