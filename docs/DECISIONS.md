@@ -38,7 +38,7 @@ When the app is opened on a Sunday (local time), it asks:
 
 > This week will not come again. Name it, or let it go.
 
-The prompt stays available for the rest of that Sunday, until the user either names the week or chooses "Let it go". Both choices are final. If the user never opens the app that Sunday, the week settles as grey sand permanently.
+The prompt stays available for the rest of that Sunday, until the user either names the week or chooses "Let it go". Both choices are final. If the user never opens the app that Sunday, the week is recorded as missed, permanently.
 
 - **Why unforgiving:** most habit apps let you backfill missed days. Here, missing a week can't be undone, which mirrors how time works. The app practices what it preaches.
 - **Why not stricter:** consuming the chance the moment the prompt appears would make an accidental reload or an interruption cost a week. Harshness should come from the user's own choice, not from a technical accident.
@@ -56,13 +56,11 @@ A week runs Monday to Sunday and belongs to the Sunday that ends it, so the ritu
 - **The answer settles into the sand.** After "Keep it", the prompt fades out and the hourglass fades in with the week's name shown underneath, in its color, for a few seconds.
 - **Answers are checked at the moment of saving.** If someone is still typing when Sunday ends, the answer is refused and the app moves on to Monday. Otherwise it would be filed under the next week.
 
-### Released weeks are plain sand
+### Only named weeks carry color
 
-A week the user chose to let go settles as uncolored sand, while a week that was never answered is grey. Facing the question and deciding to let the week pass is different from not showing up, so the strata tell three stories: named, released and missed.
+The data keeps every week's story apart: named, released (the user chose "Let it go"), missed (the Sunday passed without an answer), and unrecorded (lived before the app was first used). Keeping unrecorded apart from missed matters: otherwise a 30-year-old would start with decades of "missed" weeks they never had a chance to name.
 
-### Grey means "missed", not "before"
-
-Weeks lived before the user first opened the app are shown in a separate, fainter tone. Without that distinction, a 30-year-old's bottom bulb would be almost entirely grey on day one, burying their future strata and diluting what grey means. Grey is reserved for weeks the user had the chance to name and didn't.
+On screen, only named weeks have color. Released, missed and unrecorded weeks all settle as the same white sand. An earlier design gave each its own tone (grey for missed, a faint tone for the unrecorded past), but in the final black-and-white theme, color is reserved for the weeks the user actually shaped. The distinctions stay in the data, ready for a future history view.
 
 ### Letters to future weeks
 
@@ -72,7 +70,7 @@ Users can write a sealed note to a specific future week. The note glints as a gr
 - **Choosing the week.** Presets (next birthday, in a year, in five years, in ten years) cover the common cases with their dates shown, and "On a date" uses the same three fields as onboarding for anniversaries and other specific days. The letter opens at the start of that date's week.
 - **Only within the expected lifespan.** A letter's glint sits at its week's place in the remaining sand, so a week beyond the expected age has nowhere to be. Presets that would land past it are shown but disabled.
 - **Sealed means sealed.** Until its week arrives, a letter can't be read, edited, deleted or even listed. It exists only as a glint. That keeps the act of sealing meaningful, in the same spirit as the ritual's final answers.
-- **Arrival is quiet.** When a letter arrives, a dot appears in the top-right corner and pulses in the sand color while anything is unread. Once everything is read, it becomes a still grey dot. It only appears after the first letter arrives, so that first arrival is a surprise, and then it stays as the way back to past letters.
+- **Arrival is quiet.** When a letter arrives, a white dot appears in the top-right corner and pulses while anything is unread. Once everything is read, it stays still. It only appears after the first letter arrives, so that first arrival is a surprise, and then it stays as the way back to past letters.
 - **Arrived letters can be deleted, never edited.** A past self's words shouldn't be rewritten, but the user can choose to let a letter go. Unlike "Let it go" in the ritual, deleting asks for confirmation, because a letter is something that can never be written again.
 - **Glints are placed by area,** like the sand levels: a letter halfway through the remaining time sits where half of the remaining sand lies above it. Each glint's horizontal position and twinkle come from a hash of the letter's id, so they stay put between visits.
 
@@ -117,28 +115,31 @@ Big totals like "2,000 weeks" are abstract. Counting things that actually repeat
 
 ## Visual design
 
-### Nocturne
+### From Nocturne to pure black and white
 
-Three directions were prototyped as standalone pages with a working hourglass: Nocturne (dark and contemplative, serif), Parchment (a classical still life with an engraved frame) and Stark mono (black and white, monospace). Nocturne was chosen because its quiet, near-empty screen suits the subject and puts all the attention on the hourglass.
+Three directions were prototyped as standalone pages with a working hourglass: Nocturne (dark and contemplative, serif), Parchment (a classical still life with an engraved frame) and Stark mono (black and white, monospace). Nocturne was chosen and built: near-black and warm grey surfaces, a faint glass outline, softer grey for secondary text, and matching light and dark modes.
+
+Before the first release, it was simplified to its essence: **pure black, and pure white for everything on it.** There is no grey text, no faint outline and no light mode. Hierarchy comes only from size, weight and spacing. The subject is stark, and the design now is too.
 
 - **Type:** Cormorant Garamond, with light-weight headings. A thin classical serif gives the app a timeless tone, fitting a phrase that dates back to antiquity.
-- **Surfaces:** near-black (`#0B0B0C`) in dark mode and warm grey (`#E9E6E0`) in light mode, with a faint hairline for the glass and no decorative frame.
+- **Two deliberate exceptions:** placeholders and disabled buttons are dimmed. In pure white they would look identical to typed text and active buttons, so people would type over what looks like an answer or tap buttons that don't respond.
+- **A step indicator without color:** onboarding's current step is shown by a longer line, since a brighter one is no longer possible.
 
-### Pure monochrome sand
+### One theme, always black
 
-The sand is pure white in dark mode and pure black in light mode, with no grain texture. Maximum contrast makes remaining time the most prominent thing on the screen, and flat shapes keep the hourglass abstract instead of trying to look realistic. Color appears only in the strata, so the painted weeks stand out as the only part of the hourglass the user has shaped.
+The app ignores the system's light or dark setting. A mirrored light mode would have doubled the design surface for little gain, and the hourglass reads best as white sand in a dark room.
 
-### The glint inverts the sand
+### Pure white sand
 
-A sealed letter appears as a sparkle in the inverse of the sand color: black in dark mode, white in light mode. It's visible against the sand without adding a new accent color, which keeps the palette strictly monochrome outside the strata.
+All the sand is flat, pure white, with no grain texture. Maximum contrast makes the remaining time the most prominent thing on the screen, and flat shapes keep the hourglass abstract instead of trying to look realistic.
+
+### The glint is a hole in the sand
+
+A sealed letter appears as a black sparkle in the white sand. It uses the background color rather than adding a new one, which keeps the screen strictly black and white outside the strata.
 
 ### A curated strata palette
 
-Painted weeks use a fixed palette of ten muted tones (Ember, Rose, Moss, Tide, Dusk, Ochre, Clay, Sage, Plum, Slate), each with a tuned variant for light and dark mode. A free color picker would let clashing colors turn the sediment into noise. A curated set keeps any combination of choices looking coherent.
-
-### Light and dark modes follow the system
-
-Both modes are designed deliberately rather than generated by inverting colors, and the app follows the operating system's setting.
+Named weeks use a fixed palette of ten muted tones (Ember, Rose, Moss, Tide, Dusk, Ochre, Clay, Sage, Plum, Slate), tuned to glow softly against black. They are the only color in the app. A free color picker would let clashing colors turn the sediment into noise, and a curated set keeps any combination of choices looking coherent.
 
 ## Technical
 
@@ -168,7 +169,7 @@ Cormorant Garamond is bundled with the app through the `@fontsource` package ins
 
 ### Theme tokens as CSS variables
 
-All colors are CSS variables that switch with the operating system's light or dark setting, and Tailwind exposes them as named utilities (`bg-canvas`, `text-ink`, `text-muted`). Components never mention a mode: they use `text-ink`, and the right value applies automatically. The canvas-drawn hourglass can read the same variables, so there's a single source of truth.
+All colors are CSS variables with semantic names, and Tailwind exposes them as utilities (`bg-canvas`, `text-ink`, `text-muted`). Components describe a role ("secondary text"), not a value, and the canvas-drawn hourglass reads the same variables, so there's a single source of truth. That paid off when the theme moved to pure black and white: the whole restyle was a change to one file, plus two spots that had relied on a difference in color.
 
 ### Vitest + Testing Library, without globals
 
@@ -228,3 +229,15 @@ Vercel's default caching is overridden in `vercel.json` in two places:
 
 - **The service worker and manifest are always revalidated.** If a browser or CDN cached an old `sw.js`, users could be stuck on an outdated version of the app long after a new deploy.
 - **Built assets are cached forever.** Files in `/assets` have a content hash in their names, so a changed file always gets a new URL, and the old one can safely be cached indefinitely.
+
+### An icon drawn from the app's own geometry
+
+The app icon is the hourglass itself: white sand in the top bulb, a few falling grains, and the pile below, in white on the app's black. A script (`bun run icons`) draws it from the same glass geometry the app uses, including the area-based sand levels, and `@vite-pwa/assets-generator` renders every size from that single SVG. The icon can't drift from the app, and regenerating it is one command. Maskable and Apple icons get extra padding, so the glass stays inside the safe zone that launchers crop to.
+
+### A black splash screen
+
+The installed app's splash screen, title bar and browser theme color are all black, the same as the app and its icon, so opening it goes from icon to splash to hourglass without a flash of another color.
+
+### Deferred: a "core sample" of recent strata
+
+Because the strata are proportional to a whole life, each week is a hairline, and even years of named weeks form a thin band. The planned answer is a zoomed-in cross-section of recent strata, readable week by week, opened by tapping the pile. It is deliberately left out of the first version: new users won't have enough strata to need it for months, and it deserves its own design pass.

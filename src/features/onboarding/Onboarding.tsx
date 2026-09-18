@@ -72,10 +72,11 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
       role="img"
       aria-label={`Step ${current + 1} of ${total}`}
     >
+      {/* In a single color, the current step stands out by its length. */}
       {Array.from({ length: total }, (_, i) => (
         <span
           key={i}
-          className={cn('h-px w-5', i === current ? 'bg-ink' : 'bg-line')}
+          className={cn('h-px bg-ink', i === current ? 'w-8' : 'w-2')}
         />
       ))}
     </div>
