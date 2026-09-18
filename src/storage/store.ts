@@ -1,5 +1,11 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import {
+  deliveryFor,
+  hasArrived,
+  validateLetterBody,
+  type Letter,
+} from '../domain/letters'
 import type { Profile } from '../domain/life'
 import { canAnswer, type WeekEntries, type WeekEntry } from '../domain/ritual'
 import { weekKeyOf, type WeekKey } from '../domain/week'
@@ -16,6 +22,12 @@ export interface PersistedState {
   hasTouchedGlass: boolean
   /** Each answered week's final outcome. Entries are never changed. */
   entries: WeekEntries
+  letters: Letter[]
+  /**
+   * Set once a letter has been opened or deleted, so the letters dot stays
+   * even after every arrived letter is gone.
+   */
+  hasReceivedLetter: boolean
 }
 
 interface Actions {
@@ -26,6 +38,12 @@ interface Actions {
    * week can no longer be answered at `now`.
    */
   recordWeek: (week: WeekKey, entry: WeekEntry, now: Date) => boolean
+  /** Seals a letter to the week containing `date`. Returns false if invalid. */
+  sealLetter: (body: string, date: Date, now: Date) => boolean
+  /** Marks an arrived letter as read. Sealed letters can't be opened. */
+  openLetter: (id: string, now: Date) => void
+  /** Deletes an arrived letter. Sealed letters can't be deleted. */
+  deleteLetter: (id: string, now: Date) => void
 }
 
 export type AppState = PersistedState & Actions
@@ -35,6 +53,8 @@ export const initialState: PersistedState = {
   firstWeek: null,
   hasTouchedGlass: false,
   entries: {},
+  letters: [],
+  hasReceivedLetter: false,
 }
 
 export const useAppStore = create<AppState>()(
@@ -50,6 +70,37 @@ export const useAppStore = create<AppState>()(
         set({ entries: { ...entries, [week]: entry } })
         return true
       },
+      sealLetter: (body, date, now) => {
+        const { profile, letters } = get()
+        if (!profile || validateLetterBody(body) !== null) return false
+        const delivery = deliveryFor(date, profile, now)
+        if ('error' in delivery) return false
+        const letter: Letter = {
+          id: crypto.randomUUID(),
+          body: body.trim(),
+          writtenAt: now.toISOString(),
+          week: delivery.week,
+          openedAt: null,
+        }
+        set({ letters: [...letters, letter] })
+        return true
+      },
+      openLetter: (id, now) =>
+        set(({ letters }) => ({
+          hasReceivedLetter: true,
+          letters: letters.map((letter) =>
+            letter.id === id && hasArrived(letter, now) && !letter.openedAt
+              ? { ...letter, openedAt: now.toISOString() }
+              : letter,
+          ),
+        })),
+      deleteLetter: (id, now) =>
+        set(({ letters }) => ({
+          hasReceivedLetter: true,
+          letters: letters.filter(
+            (letter) => letter.id !== id || !hasArrived(letter, now),
+          ),
+        })),
     }),
     {
       name: STORAGE_KEY,
@@ -61,11 +112,15 @@ export const useAppStore = create<AppState>()(
         firstWeek,
         hasTouchedGlass,
         entries,
+        letters,
+        hasReceivedLetter,
       }): PersistedState => ({
         profile,
         firstWeek,
         hasTouchedGlass,
         entries,
+        letters,
+        hasReceivedLetter,
       }),
     },
   ),
