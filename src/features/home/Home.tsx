@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { hasArrived, isUnread } from '../../domain/letters'
 import {
   formatTimeOfDay,
   isBorrowedTime,
@@ -6,40 +7,104 @@ import {
   lifeFraction,
   type Profile,
 } from '../../domain/life'
+import type { StrataColor } from '../../domain/palette'
+import type { WeekEntries } from '../../domain/ritual'
 import type { WeekKey } from '../../domain/week'
-import { useNow } from '../../hooks/useNow'
 import { useAppStore } from '../../storage/store'
 import { cn } from '../../ui/cn'
 import { fadeClass, useFade } from '../../ui/fade'
+import { Sheet } from '../../ui/Sheet'
+import { useBackToClose } from '../../ui/useBackToClose'
 import { Hourglass } from '../hourglass/Hourglass'
 import { requestTiltPermission } from '../hourglass/tilt'
+import { LetterList } from '../letters/LetterList'
+import { WriteLetter } from '../letters/WriteLetter'
 
 /** How long the revealed text stays before fading away. */
 export const REVEAL_MS = 3500
+/** How long a message, like a newly named week, stays on screen. */
+export const MESSAGE_MS = 4500
+
+export interface SettledWeek {
+  name: string
+  color: StrataColor
+}
+
+interface Message {
+  text: string
+  color?: StrataColor
+}
+
+type SheetKind = 'menu' | 'write' | 'letters'
 
 interface Props {
   profile: Profile
   firstWeek: WeekKey
+  entries: WeekEntries
+  now: Date
+  /** A week that was just named, shown briefly as it settles into the sand. */
+  settled?: SettledWeek | null
 }
 
-export function Home({ profile, firstWeek }: Props) {
-  const now = useNow()
+const fadingText = (shown: boolean) =>
+  cn(
+    'transition-opacity duration-1000 motion-reduce:transition-none',
+    shown ? 'opacity-100' : 'pointer-events-none opacity-0',
+  )
+
+export function Home({ profile, firstWeek, entries, now, settled }: Props) {
   const { visible } = useFade()
   const hasTouchedGlass = useAppStore((state) => state.hasTouchedGlass)
   const touchGlass = useAppStore((state) => state.touchGlass)
-  const [revealed, setRevealed] = useState(false)
-  const hideTimer = useRef<number | undefined>(undefined)
+  const letters = useAppStore((state) => state.letters)
+  const hasReceivedLetter = useAppStore((state) => state.hasReceivedLetter)
+  const sealLetter = useAppStore((state) => state.sealLetter)
+  const openLetter = useAppStore((state) => state.openLetter)
+  const deleteLetter = useAppStore((state) => state.deleteLetter)
 
-  useEffect(() => () => clearTimeout(hideTimer.current), [])
+  const [revealed, setRevealed] = useState(false)
+  const [sheet, setSheet] = useState<SheetKind | null>(null)
+  const [message, setMessage] = useState<Message | null>(
+    settled ? { text: settled.name, color: settled.color } : null,
+  )
+  const [messageShown, setMessageShown] = useState(message !== null)
+  const revealTimer = useRef<number | undefined>(undefined)
+  useBackToClose(sheet !== null, () => setSheet(null))
+
+  useEffect(() => () => clearTimeout(revealTimer.current), [])
+
+  // Whatever shows a message also sets it visible; this only schedules the fade.
+  useEffect(() => {
+    if (!message) return
+    const timer = setTimeout(() => setMessageShown(false), MESSAGE_MS)
+    return () => clearTimeout(timer)
+  }, [message])
+
+  function showMessage(next: Message) {
+    setMessage(next)
+    setMessageShown(true)
+  }
+
+  const arrived = letters.filter((letter) => hasArrived(letter, now))
+  const unread = arrived.filter((letter) => isUnread(letter, now)).length
+  // The dot first appears with the first arrival, then stays for good.
+  const showLettersDot = hasReceivedLetter || arrived.length > 0
 
   function handleTouch() {
     if (!hasTouchedGlass) {
       touchGlass()
       void requestTiltPermission()
     }
+    setMessageShown(false)
     setRevealed(true)
-    clearTimeout(hideTimer.current)
-    hideTimer.current = window.setTimeout(() => setRevealed(false), REVEAL_MS)
+    clearTimeout(revealTimer.current)
+    revealTimer.current = window.setTimeout(() => setRevealed(false), REVEAL_MS)
+  }
+
+  function openSheet(kind: SheetKind) {
+    clearTimeout(revealTimer.current)
+    setRevealed(false)
+    setSheet(kind)
   }
 
   return (
@@ -49,22 +114,42 @@ export function Home({ profile, firstWeek }: Props) {
         fadeClass(visible),
       )}
     >
+      {showLettersDot && (
+        <button
+          type="button"
+          onClick={() => openSheet('letters')}
+          aria-label={unread > 0 ? `Letters, ${unread} unread` : 'Letters'}
+          className="absolute top-[max(0.75rem,env(safe-area-inset-top))] right-3 flex size-11 items-center justify-center rounded-full outline-none focus-visible:outline-1 focus-visible:outline-line"
+        >
+          <span
+            aria-hidden
+            className={cn(
+              'size-2 rounded-full',
+              unread > 0
+                ? 'animate-pulse bg-sand motion-reduce:animate-none'
+                : 'bg-missed',
+            )}
+          />
+        </button>
+      )}
+
       <button
         type="button"
         onClick={handleTouch}
         className="h-[min(68dvh,46rem)] w-full max-w-xl cursor-pointer rounded-3xl outline-none focus-visible:outline-1 focus-visible:outline-offset-8 focus-visible:outline-line"
       >
-        <Hourglass profile={profile} firstWeek={firstWeek} now={now} />
+        <Hourglass
+          profile={profile}
+          firstWeek={firstWeek}
+          entries={entries}
+          letters={letters}
+          now={now}
+        />
       </button>
 
-      <div className="absolute inset-x-4 bottom-[max(3rem,env(safe-area-inset-bottom))] text-center">
+      <div className="absolute inset-x-4 bottom-[max(2rem,env(safe-area-inset-bottom))] text-center">
         {/* Always in the accessibility tree; only its visibility changes. */}
-        <p
-          className={cn(
-            'text-2xl font-light transition-opacity duration-1000 motion-reduce:transition-none',
-            revealed ? 'opacity-100' : 'opacity-0',
-          )}
-        >
+        <p className={cn('text-2xl font-light', fadingText(revealed))}>
           {isBorrowedTime(profile, now) ? (
             'Every week now is borrowed.'
           ) : (
@@ -74,16 +159,83 @@ export function Home({ profile, firstWeek }: Props) {
             </>
           )}
         </p>
+        <button
+          type="button"
+          onClick={() => openSheet('menu')}
+          aria-label="Menu"
+          className={cn(
+            'mt-1 px-4 py-1 text-2xl tracking-[0.3em] text-muted outline-none focus-visible:opacity-100',
+            fadingText(revealed),
+          )}
+        >
+          ···
+        </button>
+
+        {message && (
+          <p
+            role="status"
+            style={
+              message.color
+                ? { color: `var(--mm-${message.color})` }
+                : undefined
+            }
+            className={cn(
+              'absolute inset-x-0 top-0 text-2xl font-light italic',
+              fadingText(messageShown),
+            )}
+          >
+            {message.text}
+          </p>
+        )}
         <p
           aria-hidden={hasTouchedGlass}
           className={cn(
-            'absolute inset-x-0 top-1 text-base text-muted italic transition-opacity duration-1000 motion-reduce:transition-none',
-            hasTouchedGlass ? 'opacity-0' : 'opacity-100',
+            'absolute inset-x-0 top-1 text-base text-muted italic',
+            fadingText(!hasTouchedGlass && !messageShown),
           )}
         >
           Touch the glass.
         </p>
       </div>
+
+      {sheet === 'menu' && (
+        <Sheet label="Menu" onClose={() => setSheet(null)}>
+          <nav className="mt-[14vh] flex flex-col items-start gap-4">
+            <button
+              type="button"
+              onClick={() => setSheet('write')}
+              className="text-[2rem] font-light outline-none focus-visible:underline focus-visible:underline-offset-8"
+            >
+              Write a letter
+            </button>
+          </nav>
+        </Sheet>
+      )}
+
+      {sheet === 'write' && (
+        <Sheet label="Write a letter" onClose={() => setSheet(null)}>
+          <WriteLetter
+            profile={profile}
+            now={now}
+            onSeal={(body, date) => {
+              if (sealLetter(body, date, new Date())) {
+                setSheet(null)
+                showMessage({ text: 'Sealed.' })
+              }
+            }}
+          />
+        </Sheet>
+      )}
+
+      {sheet === 'letters' && (
+        <Sheet label="Letters" onClose={() => setSheet(null)}>
+          <LetterList
+            letters={arrived}
+            onOpen={(id) => openLetter(id, new Date())}
+            onDelete={(id) => deleteLetter(id, new Date())}
+          />
+        </Sheet>
+      )}
     </main>
   )
 }

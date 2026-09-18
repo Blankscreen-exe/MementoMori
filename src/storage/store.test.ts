@@ -40,6 +40,9 @@ describe('completeOnboarding', () => {
         profile: { birthDate: '1994-05-12', expectedAge: 80 },
         firstWeek: '2026-09-20',
         hasTouchedGlass: false,
+        entries: {},
+        letters: [],
+        hasReceivedLetter: false,
       },
     })
   })
@@ -72,5 +75,103 @@ describe('rehydration', () => {
       profile: { birthDate: '1994-05-12', expectedAge: 80 },
       hasTouchedGlass: false,
     })
+  })
+})
+
+describe('recordWeek', () => {
+  const SUNDAY = new Date(2026, 8, 20, 21)
+  const named = { outcome: 'named', name: 'moved', color: 'tide' } as const
+
+  it('records the answer for this Sunday', () => {
+    expect(useAppStore.getState().recordWeek('2026-09-20', named, SUNDAY)).toBe(
+      true,
+    )
+    expect(useAppStore.getState().entries).toEqual({ '2026-09-20': named })
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
+    expect(stored.state.entries).toEqual({ '2026-09-20': named })
+  })
+
+  it('never overwrites an answer', () => {
+    const { recordWeek } = useAppStore.getState()
+    recordWeek('2026-09-20', named, SUNDAY)
+    expect(recordWeek('2026-09-20', { outcome: 'released' }, SUNDAY)).toBe(
+      false,
+    )
+    expect(useAppStore.getState().entries['2026-09-20']).toEqual(named)
+  })
+
+  it('refuses an answer that arrives after Sunday midnight', () => {
+    const justAfter = new Date(2026, 8, 21, 0, 0, 5)
+    expect(
+      useAppStore.getState().recordWeek('2026-09-20', named, justAfter),
+    ).toBe(false)
+    expect(useAppStore.getState().entries).toEqual({})
+  })
+})
+
+describe('letters', () => {
+  const FRIDAY = new Date(2026, 8, 18, 12)
+  const NEXT_MONDAY = new Date(2026, 8, 21, 9)
+
+  function sealOne(date = new Date(2026, 8, 23)) {
+    useAppStore.setState({
+      profile: { birthDate: '1994-05-12', expectedAge: 80 },
+    })
+    return useAppStore.getState().sealLetter('  Dear me,  ', date, FRIDAY)
+  }
+
+  it('seals a letter to the week of the chosen date', () => {
+    expect(sealOne()).toBe(true)
+    expect(useAppStore.getState().letters).toEqual([
+      {
+        id: expect.any(String),
+        body: 'Dear me,',
+        writtenAt: FRIDAY.toISOString(),
+        week: '2026-09-27',
+        openedAt: null,
+      },
+    ])
+  })
+
+  it('refuses letters to this week or beyond the expected lifespan', () => {
+    expect(sealOne(new Date(2026, 8, 19))).toBe(false)
+    expect(sealOne(new Date(2080, 0, 1))).toBe(false)
+    expect(useAppStore.getState().letters).toEqual([])
+  })
+
+  it('refuses blank letters', () => {
+    useAppStore.setState({
+      profile: { birthDate: '1994-05-12', expectedAge: 80 },
+    })
+    expect(
+      useAppStore.getState().sealLetter('   ', new Date(2027, 0, 1), FRIDAY),
+    ).toBe(false)
+  })
+
+  it('cannot open or delete a letter before it arrives', () => {
+    sealOne()
+    const [{ id }] = useAppStore.getState().letters
+    useAppStore.getState().openLetter(id, FRIDAY)
+    useAppStore.getState().deleteLetter(id, FRIDAY)
+    expect(useAppStore.getState().letters).toMatchObject([{ openedAt: null }])
+  })
+
+  it('opens an arrived letter once, keeping the first reading time', () => {
+    sealOne()
+    const [{ id }] = useAppStore.getState().letters
+    useAppStore.getState().openLetter(id, NEXT_MONDAY)
+    useAppStore.getState().openLetter(id, new Date(2026, 8, 25))
+    expect(useAppStore.getState().letters[0].openedAt).toBe(
+      NEXT_MONDAY.toISOString(),
+    )
+    expect(useAppStore.getState().hasReceivedLetter).toBe(true)
+  })
+
+  it('deletes an arrived letter and remembers one was received', () => {
+    sealOne()
+    const [{ id }] = useAppStore.getState().letters
+    useAppStore.getState().deleteLetter(id, NEXT_MONDAY)
+    expect(useAppStore.getState().letters).toEqual([])
+    expect(useAppStore.getState().hasReceivedLetter).toBe(true)
   })
 })

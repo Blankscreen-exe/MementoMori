@@ -1,10 +1,17 @@
 import { STRATA_COLORS, type StrataColor } from '../../domain/palette'
 import type { Layer } from '../../domain/strata'
-import { glassOutline, pileSurfaceY, topSurfaceY, type Glass } from './geometry'
+import {
+  glassOutline,
+  halfWidthAt,
+  pileSurfaceY,
+  topSurfaceY,
+  type Glass,
+} from './geometry'
 
 export interface Palette {
   glass: string
   sand: string
+  glint: string
   unrecorded: string
   missed: string
   strata: Record<StrataColor, string>
@@ -17,6 +24,7 @@ export function readPalette(root: Element = document.documentElement): Palette {
   return {
     glass: token('glass'),
     sand: token('sand'),
+    glint: token('glint'),
     unrecorded: token('unrecorded'),
     missed: token('missed'),
     strata: Object.fromEntries(
@@ -41,6 +49,32 @@ export interface Scene {
   /** Slope of the sand surfaces, from device tilt. */
   tilt: number
   grains: Grain[]
+  glints: Glint[]
+}
+
+/** A sealed letter, glinting at its week's place in the remaining sand. */
+export interface Glint {
+  /** 0 is now, at the neck; 1 is the end of the expected lifespan. */
+  share: number
+  /** Stable per letter: sets its horizontal position and twinkle phase. */
+  seed: number
+}
+
+/** A stable number in [0, 1) derived from a string, such as a letter's id. */
+export function seedOf(value: string): number {
+  // FNV-1a over the characters...
+  let hash = 2166136261
+  for (let i = 0; i < value.length; i++) {
+    hash = Math.imul(hash ^ value.charCodeAt(i), 16777619)
+  }
+  // ...then MurmurHash3's finalizer, so ids that differ by one character
+  // still land far apart.
+  hash ^= hash >>> 16
+  hash = Math.imul(hash, 0x85ebca6b)
+  hash ^= hash >>> 13
+  hash = Math.imul(hash, 0xc2b2ae35)
+  hash ^= hash >>> 16
+  return (hash >>> 0) / 2 ** 32
 }
 
 const bell = (x: number) => Math.exp(-x * x)
@@ -72,16 +106,18 @@ function pileBoundaryAt(scene: Scene, share: number, x: number): number {
   return pileSurfaceY(glass, share * lived) + tilt * dx * share - mound
 }
 
-function layerColor(layer: Layer, palette: Palette): string {
+export function layerColor(layer: Layer, palette: Palette): string {
   switch (layer.kind) {
     case 'unrecorded':
       return palette.unrecorded
+    // A released week was let go on purpose, so it settles as plain sand.
+    // Grey is reserved for weeks that were never answered.
     case 'current':
+    case 'released':
       return palette.sand
     case 'named':
       return layer.color ? palette.strata[layer.color] : palette.sand
     case 'missed':
-    case 'released':
       return palette.missed
   }
 }
@@ -113,6 +149,7 @@ export function drawHourglass(
   palette: Palette,
   width: number,
   height: number,
+  time = 0,
 ) {
   const { glass } = scene
   ctx.clearRect(0, 0, width, height)
@@ -138,6 +175,7 @@ export function drawHourglass(
     glass.neck + 1,
     palette.sand,
   )
+  drawGlints(ctx, scene, palette, time)
   ctx.restore()
 
   // Lower bulb: the strata of the time lived, drawn from the top layer down so
@@ -178,6 +216,40 @@ export function drawHourglass(
   ctx.strokeStyle = palette.glass
   ctx.lineWidth = 1
   ctx.stroke(outline)
+}
+
+function drawGlints(
+  ctx: CanvasRenderingContext2D,
+  scene: Scene,
+  palette: Palette,
+  time: number,
+) {
+  const { glass, lived } = scene
+  const size = Math.max(2, glass.halfHeight * 0.02)
+  ctx.strokeStyle = palette.glint
+  ctx.fillStyle = palette.glint
+  ctx.lineWidth = Math.max(1, size * 0.2)
+
+  for (const { share, seed } of scene.glints) {
+    // Measured by area from the neck, like the sand itself.
+    const y = topSurfaceY(glass, share * (1 - lived))
+    const x = glass.cx + (seed * 2 - 1) * 0.6 * halfWidthAt(glass, y)
+    // Keep the whole sparkle inside the sand.
+    if (y > glass.neck - size * 2 || y < topSandAt(scene, x) + size * 2)
+      continue
+
+    const twinkle = 0.35 + 0.65 * Math.abs(Math.sin(time / 700 + seed * 6))
+    const reach = size * (0.6 + 0.4 * twinkle)
+    ctx.globalAlpha = twinkle
+    ctx.beginPath()
+    ctx.moveTo(x - reach, y)
+    ctx.lineTo(x + reach, y)
+    ctx.moveTo(x, y - reach)
+    ctx.lineTo(x, y + reach)
+    ctx.stroke()
+    ctx.fillRect(x - size * 0.2, y - size * 0.2, size * 0.4, size * 0.4)
+  }
+  ctx.globalAlpha = 1
 }
 
 /**

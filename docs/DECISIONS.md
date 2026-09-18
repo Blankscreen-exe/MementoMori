@@ -47,6 +47,19 @@ The prompt stays available for the rest of that Sunday, until the user either na
 
 A week runs Monday to Sunday and belongs to the Sunday that ends it, so the ritual always names the week that is just finishing.
 
+### How the ritual works
+
+- **It blocks the app.** On a Sunday, the app opens to the prompt and nothing else, until the week is named or let go. A "Not now" button would offer an easy way to avoid the question, which defeats its purpose.
+- **A name is a short phrase.** Up to 40 characters, trimmed and with repeated spaces collapsed. A single word felt too narrow for weeks like "moved to Lisbon", and the limit still forces the week to be distilled.
+- **A color must be chosen.** None is preselected, and "Keep it" stays disabled until both a name and a color are chosen. A default would make most strata the same tone, and choosing is part of reflecting on the week.
+- **"Let it go" doesn't ask for confirmation.** An "Are you sure?" dialog would undercut the gravity the prompt sets up. The button sits quietly below "Keep it", so it's hard to hit by accident.
+- **The answer settles into the sand.** After "Keep it", the prompt fades out and the hourglass fades in with the week's name shown underneath, in its color, for a few seconds.
+- **Answers are checked at the moment of saving.** If someone is still typing when Sunday ends, the answer is refused and the app moves on to Monday. Otherwise it would be filed under the next week.
+
+### Released weeks are plain sand
+
+A week the user chose to let go settles as uncolored sand, while a week that was never answered is grey. Facing the question and deciding to let the week pass is different from not showing up, so the strata tell three stories: named, released and missed.
+
 ### Grey means "missed", not "before"
 
 Weeks lived before the user first opened the app are shown in a separate, fainter tone. Without that distinction, a 30-year-old's bottom bulb would be almost entirely grey on day one, burying their future strata and diluting what grey means. Grey is reserved for weeks the user had the chance to name and didn't.
@@ -54,6 +67,14 @@ Weeks lived before the user first opened the app are shown in a separate, fainte
 ### Letters to future weeks
 
 Users can write a sealed note to a specific future week. The note glints as a grain in the top bulb and opens once that week arrives. It gives the future bulb meaning beyond "time you're losing": it also holds things to look forward to.
+
+- **Writing.** Letters are written from the menu that appears when the glass is tapped, and hold up to 2,000 characters: about a page, enough for a real letter without turning into a journal. The button says "Seal it", echoing "Keep it" and "Let it go" from the ritual.
+- **Choosing the week.** Presets (next birthday, in a year, in five years, in ten years) cover the common cases with their dates shown, and "On a date" uses the same three fields as onboarding for anniversaries and other specific days. The letter opens at the start of that date's week.
+- **Only within the expected lifespan.** A letter's glint sits at its week's place in the remaining sand, so a week beyond the expected age has nowhere to be. Presets that would land past it are shown but disabled.
+- **Sealed means sealed.** Until its week arrives, a letter can't be read, edited, deleted or even listed. It exists only as a glint. That keeps the act of sealing meaningful, in the same spirit as the ritual's final answers.
+- **Arrival is quiet.** When a letter arrives, a dot appears in the top-right corner and pulses in the sand color while anything is unread. Once everything is read, it becomes a still grey dot. It only appears after the first letter arrives, so that first arrival is a surprise, and then it stays as the way back to past letters.
+- **Arrived letters can be deleted, never edited.** A past self's words shouldn't be rewritten, but the user can choose to let a letter go. Unlike "Let it go" in the ritual, deleting asks for confirmation, because a letter is something that can never be written again.
+- **Glints are placed by area,** like the sand levels: a letter halfway through the remaining time sits where half of the remaining sand lies above it. Each glint's horizontal position and twinkle come from a hash of the letter's id, so they stay put between visits.
 
 ### A minimal home screen
 
@@ -165,6 +186,8 @@ App state lives in a small Zustand store, and its persist middleware saves it to
 ### No router
 
 The app has no meaningful URLs: it has onboarding, a home screen and a few sheets. Screens are driven by app state instead of a routing library. Opening a sheet pushes a browser history entry, so the Android back gesture closes the sheet instead of leaving the app.
+
+The home screen owns a single history entry for "a sheet is open", rather than each sheet adding its own. Moving from the menu to "Write a letter" swaps what is shown without touching history, and closing by button removes the entry again. An earlier version gave every sheet its own entry, which raced when one sheet closed as another opened.
 
 ### A canvas-rendered hourglass
 
