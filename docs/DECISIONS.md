@@ -228,3 +228,15 @@ Vercel's default caching is overridden in `vercel.json` in two places:
 
 - **The service worker and manifest are always revalidated.** If a browser or CDN cached an old `sw.js`, users could be stuck on an outdated version of the app long after a new deploy.
 - **Built assets are cached forever.** Files in `/assets` have a content hash in their names, so a changed file always gets a new URL, and the old one can safely be cached indefinitely.
+
+### An icon drawn from the app's own geometry
+
+The app icon is the hourglass itself: white sand in the top bulb, a few falling grains, and the pile below, on the app's near-black. A script (`bun run icons`) draws it from the same glass geometry the app uses, including the area-based sand levels, and `@vite-pwa/assets-generator` renders every size from that single SVG. The icon can't drift from the app, and regenerating it is one command. Maskable and Apple icons get extra padding, so the glass stays inside the safe zone that launchers crop to.
+
+### A dark splash screen
+
+A web app manifest takes one theme color, so the installed app's splash screen and title bar can't follow the system's light or dark setting. They use the dark background, matching the icon. In light mode, the brief dark splash before the light app appears reads as intentional.
+
+### Deferred: a "core sample" of recent strata
+
+Because the strata are proportional to a whole life, each week is a hairline, and even years of named weeks form a thin band. The planned answer is a zoomed-in cross-section of recent strata, readable week by week, opened by tapping the pile. It is deliberately left out of the first version: new users won't have enough strata to need it for months, and it deserves its own design pass.
