@@ -5,9 +5,9 @@
 **[Open the app →](https://mementomori-app.vercel.app)** · Installable, works offline, and everything stays on your device.
 
 <p align="center">
-  <img src="docs/screenshots/hourglass-dark.png" width="220" alt="The hourglass in dark mode: white sand above, colored strata of named weeks below, three letters glinting in the sand" />
-  <img src="docs/screenshots/ritual-dark.png" width="220" alt="The Sunday ritual: 'This week will not come again. Name it, or let it go.'" />
-  <img src="docs/screenshots/hourglass-light.png" width="220" alt="The hourglass in light mode, with black sand" />
+  <img src="docs/screenshots/hourglass.png" width="220" alt="The hourglass: white sand above, a thin colored band of named weeks in the pile below, three letters glinting as black sparks in the sand" />
+  <img src="docs/screenshots/ritual.png" width="220" alt="The Sunday ritual: 'This week will not come again. Name it, or let it go.'" />
+  <img src="docs/screenshots/write-letter.png" width="220" alt="Writing a letter to the future, to open in a year" />
 </p>
 
 ## The idea
@@ -15,15 +15,15 @@
 Most "life in weeks" apps show a static grid of 4,000 boxes. This one is an hourglass, and it's built around a few rules:
 
 - **The sand is honest.** The top bulb holds exactly the share of your expected life that remains, measured by area rather than height. A grain falls every second as a heartbeat, but the levels always come from your real dates.
-- **Every Sunday, one chance.** On Sunday the app opens to a single question: _"This week will not come again. Name it, or let it go."_ Named weeks settle into the lower bulb as colored strata. Weeks let go settle as plain sand. Weeks you never answered stay grey forever.
+- **Every Sunday, one chance.** On Sunday the app opens to a single question: _"This week will not come again. Name it, or let it go."_ Named weeks settle into the lower bulb as colored strata, the only color in the app. Every other week is just sand.
 - **Letters to the future.** Write to a week years from now. Until then it's sealed: it can't be read, edited or even listed, and appears only as a glint in the sand. When its week arrives, a quiet dot appears in the corner.
 - **What's left.** Counters turn abstract time into things you can picture, like 47 summers, 2,486 Sundays, or 51 more visits to your parents, drawn as dots when there are few enough to count.
 - **Life as one day.** Tap the glass: _"9:42 AM of your life."_
 
 <p align="center">
-  <img src="docs/screenshots/onboarding-dark.png" width="220" alt="Onboarding: 'When were you born?' with day, month and year fields" />
-  <img src="docs/screenshots/letter-light.png" width="220" alt="An arrived letter being read, in light mode" />
-  <img src="docs/screenshots/counters-dark.png" width="220" alt="Counters: summers, Sundays, birthdays and visits to parents, with dots" />
+  <img src="docs/screenshots/onboarding.png" width="220" alt="Onboarding: 'When were you born?' with day, month and year fields" />
+  <img src="docs/screenshots/letter.png" width="220" alt="An arrived letter being read" />
+  <img src="docs/screenshots/counters.png" width="220" alt="Counters: summers, Sundays, birthdays, full moons and visits to parents, with dots" />
 </p>
 
 ## Engineering highlights
