@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  canAnswer,
   isRitualOpen,
+  normalizeWeekName,
+  validateWeekName,
   weekStatus,
   type RitualContext,
   type WeekEntries,
@@ -8,7 +11,7 @@ import {
 
 const SUNDAY = new Date(2026, 8, 20, 10)
 const named: WeekEntries = {
-  '2026-09-20': { outcome: 'named', word: 'moved', color: 'tide' },
+  '2026-09-20': { outcome: 'named', name: 'moved', color: 'tide' },
 }
 const released: WeekEntries = { '2026-09-20': { outcome: 'released' } }
 
@@ -67,5 +70,53 @@ describe('weekStatus', () => {
     expect(weekStatus('2026-09-20', context(SUNDAY, {}, firstWeek))).toBe(
       'current',
     )
+  })
+})
+
+describe('canAnswer', () => {
+  it('accepts an answer for this week while its Sunday lasts', () => {
+    expect(canAnswer('2026-09-20', SUNDAY, {})).toBe(true)
+    expect(
+      canAnswer('2026-09-20', new Date(2026, 8, 20, 23, 59, 59, 999), {}),
+    ).toBe(true)
+  })
+
+  it('refuses an answer submitted after Sunday midnight', () => {
+    expect(canAnswer('2026-09-20', new Date(2026, 8, 21, 0, 0, 1), {})).toBe(
+      false,
+    )
+  })
+
+  it('refuses a second answer for the same week', () => {
+    expect(canAnswer('2026-09-20', SUNDAY, named)).toBe(false)
+    expect(canAnswer('2026-09-20', SUNDAY, released)).toBe(false)
+  })
+
+  it('refuses answers for any other week', () => {
+    expect(canAnswer('2026-09-13', SUNDAY, {})).toBe(false)
+    expect(canAnswer('2026-09-27', SUNDAY, {})).toBe(false)
+  })
+})
+
+describe('week names', () => {
+  it('trims and collapses whitespace', () => {
+    expect(normalizeWeekName('  moved   to\tLisbon ')).toBe('moved to Lisbon')
+  })
+
+  it('accepts one word or a short phrase', () => {
+    expect(validateWeekName('moved')).toBeNull()
+    expect(validateWeekName('moved to Lisbon')).toBeNull()
+    expect(validateWeekName('a'.repeat(40))).toBeNull()
+  })
+
+  it('rejects blank and overly long names', () => {
+    expect(validateWeekName('   ')).toBe('empty')
+    expect(validateWeekName('a'.repeat(41))).toBe('too-long')
+  })
+
+  it('measures length after collapsing whitespace', () => {
+    expect(
+      validateWeekName(`${'a'.repeat(20)}     ${'b'.repeat(19)}`),
+    ).toBeNull()
   })
 })
