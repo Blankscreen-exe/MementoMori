@@ -3,7 +3,7 @@ import {
   minimal2023Preset,
 } from '@vite-pwa/assets-generator/config'
 
-const background = '#0b0b0c'
+const background = '#000000'
 
 // The source icon already has its own dark background. Maskable and Apple
 // icons get extra dark padding so the glass stays inside their safe zones.

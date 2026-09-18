@@ -12,10 +12,10 @@ import {
 } from '../src/features/hourglass/geometry.ts'
 
 const SIZE = 512
-const BACKGROUND = '#0b0b0c'
+const BACKGROUND = '#000000'
 const SAND = '#ffffff'
-const PILE = 'rgb(232 228 220 / 0.3)'
-const GLASS = 'rgb(232 228 220 / 0.45)'
+const PILE = '#ffffff'
+const GLASS = '#ffffff'
 /** Share of the sand shown as fallen, as if a life were 40% lived. */
 const LIVED = 0.4
 
