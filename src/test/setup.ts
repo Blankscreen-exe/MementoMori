@@ -21,6 +21,16 @@ HTMLElement.prototype.setPointerCapture = () => {}
 HTMLElement.prototype.releasePointerCapture = () => {}
 HTMLElement.prototype.hasPointerCapture = () => false
 
+// jsdom has no canvas or ResizeObserver. Components render their accessible
+// markup; the drawing itself is covered by the pure geometry tests.
+HTMLCanvasElement.prototype.getContext = (() =>
+  null) as typeof HTMLCanvasElement.prototype.getContext
+window.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 // Vitest globals are disabled, so Testing Library can't register its own cleanup.
 afterEach(() => {
   cleanup()
