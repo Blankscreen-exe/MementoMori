@@ -39,7 +39,38 @@ describe('completeOnboarding', () => {
       state: {
         profile: { birthDate: '1994-05-12', expectedAge: 80 },
         firstWeek: '2026-09-20',
+        hasTouchedGlass: false,
       },
+    })
+  })
+})
+
+describe('touchGlass', () => {
+  it('remembers the first touch', () => {
+    useAppStore.getState().touchGlass()
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
+    expect(stored.state.hasTouchedGlass).toBe(true)
+  })
+})
+
+describe('rehydration', () => {
+  it('loads data saved before newer fields existed', async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        state: {
+          profile: { birthDate: '1994-05-12', expectedAge: 80 },
+          firstWeek: '2026-09-20',
+        },
+      }),
+    )
+
+    await useAppStore.persist.rehydrate()
+
+    expect(useAppStore.getState()).toMatchObject({
+      profile: { birthDate: '1994-05-12', expectedAge: 80 },
+      hasTouchedGlass: false,
     })
   })
 })

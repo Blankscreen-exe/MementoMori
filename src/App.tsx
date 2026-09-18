@@ -4,9 +4,11 @@ import { useAppStore } from './storage/store'
 
 function App() {
   const profile = useAppStore((state) => state.profile)
+  const firstWeek = useAppStore((state) => state.firstWeek)
   const completeOnboarding = useAppStore((state) => state.completeOnboarding)
 
-  if (profile) return <Home profile={profile} />
+  if (profile && firstWeek)
+    return <Home profile={profile} firstWeek={firstWeek} />
   return <Onboarding onComplete={(p) => completeOnboarding(p, new Date())} />
 }
 
