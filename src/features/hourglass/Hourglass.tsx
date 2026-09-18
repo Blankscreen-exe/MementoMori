@@ -5,6 +5,7 @@ import {
   weeksRemaining,
   type Profile,
 } from '../../domain/life'
+import type { WeekEntries } from '../../domain/ritual'
 import { buildStrata } from '../../domain/strata'
 import type { WeekKey } from '../../domain/week'
 import { createGlass } from './geometry'
@@ -20,20 +21,21 @@ import { useTiltTarget } from './tilt'
 interface Props {
   profile: Profile
   firstWeek: WeekKey
+  entries: WeekEntries
   now: Date
 }
 
 /** Longest frame step, so a stalled tab doesn't make grains jump. */
 const MAX_FRAME_MS = 50
 
-export function Hourglass({ profile, firstWeek, now }: Props) {
+export function Hourglass({ profile, firstWeek, entries, now }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const tiltTarget = useTiltTarget()
 
   const lived = lifeFraction(profile, now)
   const layers = useMemo(
-    () => buildStrata(profile, { now, firstWeek, entries: {} }),
-    [profile, firstWeek, now],
+    () => buildStrata(profile, { now, firstWeek, entries }),
+    [profile, firstWeek, entries, now],
   )
 
   // The render loop reads the latest data from here instead of restarting.
