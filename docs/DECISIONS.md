@@ -14,6 +14,14 @@ The amount of sand in each bulb always matches the real ratio of time lived to t
 
 At the scale of a lifetime, one second is a vanishingly small fraction, so a literal one-grain-per-unit model would either look frozen or need thousands of particles. Separating the animation (always flowing) from the data (always accurate) keeps the hourglass alive without misrepresenting anything.
 
+The stream itself is a fine continuous trickle, with one slightly larger grain dropped at the start of every second. It reads as a real hourglass while keeping the one-second rhythm.
+
+### Sand is measured by area, not height
+
+A bulb is narrow near the neck and wide at the ends, so filling it to 40% of its height would hold far less than 40% of its sand. The levels are computed so that the _area_ of sand in each bulb matches the share of life it represents, using a precomputed table of the bulb's cumulative area and a binary search. The same calculation places the boundaries between strata. Tests check the result against an independent numeric integration.
+
+A side effect is that the pile can look smaller than expected: 40% of a bulb's sand only reaches a modest height, because the bottom of the bulb is its widest part. That is the honest picture.
+
 ### Tilting moves sand, never time
 
 On a phone, tilting the device shifts the sand within each bulb, but sand never travels back up through the neck. A real hourglass can be flipped to start over; a life cannot. The interaction invites play and delivers the app's message at the same moment.
@@ -160,7 +168,15 @@ The app has no meaningful URLs: it has onboarding, a home screen and a few sheet
 
 ### A canvas-rendered hourglass
 
-The hourglass is drawn with the Canvas 2D API, which handles a constantly animated scene cheaply on phones. Because a canvas is invisible to assistive technology, the same information is provided as text for screen readers. The animation pauses while the tab is hidden, and it becomes a still image when the operating system asks for reduced motion.
+The hourglass is drawn with the Canvas 2D API, which handles a constantly animated scene cheaply on phones. Because a canvas is invisible to assistive technology, the same information is provided as text for screen readers ("40% of your expected life has passed, and about 2,486 weeks remain"). The animation pauses while the tab is hidden, and it becomes a still image when the operating system asks for reduced motion.
+
+The drawing is split into three layers of code:
+
+- **Geometry** (`geometry.ts`) is pure math: the glass shape and the area calculations, fully unit-tested.
+- **Rendering** (`render.ts`) turns a scene description into canvas calls. Colors are read from the theme's CSS variables, so the canvas always matches the current mode.
+- **The component** (`Hourglass.tsx`) owns the animation loop, resizing, pausing and user preferences. It keeps the latest data in a ref, so new data doesn't restart the loop.
+
+On phones, the sand leans with the device's roll. On desktops with a mouse, it leans with the pointer's position instead, so the effect can be seen there too. iOS only reports device orientation after the user grants permission, so the app asks on the first tap of the glass, which is also when the hint retires.
 
 ### Continuous integration
 
