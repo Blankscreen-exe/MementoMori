@@ -63,6 +63,18 @@ The user picks their expected age in whole years, from 1 to 120, starting at 80.
 
 If someone outlives the age they chose, the app doesn't break or nag them to raise the number. The top bulb is empty, the stream stops and the hourglass sits still, with the line "Every week now is borrowed." The Sunday ritual keeps working, and new weeks keep settling on top of the strata.
 
+### Slow fades between onboarding steps
+
+Each onboarding step fades out and the next fades in over 0.7 seconds. A slide would suggest a quick wizard to click through, while a slow fade matches the deliberate tone of the questions. When the operating system asks for reduced motion, steps switch instantly.
+
+### Three fields for the birthday
+
+The birthday is entered in three fields (day, month, year) instead of the browser's date picker. Native pickers look different on every platform, clash with the theme, and are slow for picking a date decades in the past. The fields are always in DD / MM / YYYY order, with a label under each one so the order is never ambiguous. Focus moves to the next field automatically once one is full, so the date can be typed in one go, and impossible dates like 31 February are rejected.
+
+### A big number for the expected age
+
+The expected age is shown as one large number with − and + buttons. It can also be dragged left or right (one year per 10 pixels) or tapped to type a value directly, so every kind of user has a comfortable way to set it. It's built as an accessible spin button: screen readers announce it as "80 years", and the arrow, Page Up/Down, Home and End keys all work.
+
 ### Tail End counters
 
 Big totals like "2,000 weeks" are abstract. Counting things that actually repeat, like summers or visits home, makes the remaining time concrete. Users can define their own counters (for example "I see my parents twice a year").
@@ -113,6 +125,14 @@ Utility classes keep the styles next to the markup and remove the need to name o
 ### oxlint + Prettier
 
 The official Vite template ships with oxlint, a Rust-based linter that is much faster than ESLint and needs very little configuration. Prettier handles formatting, and its Tailwind plugin sorts class names consistently.
+
+### Self-hosted fonts
+
+Cormorant Garamond is bundled with the app through the `@fontsource` package instead of being loaded from Google Fonts. The installed app works fully offline with the right typeface, and visitors' browsers never contact a third party. That keeps the app's privacy promise literally true.
+
+### Theme tokens as CSS variables
+
+All colors are CSS variables that switch with the operating system's light or dark setting, and Tailwind exposes them as named utilities (`bg-canvas`, `text-ink`, `text-muted`). Components never mention a mode: they use `text-ink`, and the right value applies automatically. The canvas-drawn hourglass can read the same variables, so there's a single source of truth.
 
 ### Vitest + Testing Library, without globals
 
