@@ -35,6 +35,9 @@ The prompt stays available for the rest of that Sunday, until the user either na
 - **Why unforgiving:** most habit apps let you backfill missed days. Here, missing a week can't be undone, which mirrors how time works. The app practices what it preaches.
 - **Why not stricter:** consuming the chance the moment the prompt appears would make an accidental reload or an interruption cost a week. Harshness should come from the user's own choice, not from a technical accident.
 - **Why an honor system:** all data lives in the browser, so a determined user could change their device clock or edit storage. For a personal, local-only tool, adding server-side enforcement would cost privacy and simplicity for no real benefit.
+- **The first Sunday counts:** if someone starts using the app on a Sunday, the ritual opens right after onboarding. Every Sunday is a chance, with no exceptions, which keeps the rule simple to explain and to test.
+
+A week runs Monday to Sunday and belongs to the Sunday that ends it, so the ritual always names the week that is just finishing.
 
 ### Grey means "missed", not "before"
 
@@ -51,6 +54,14 @@ The home screen shows only the hourglass. Tapping it briefly reveals a single li
 ### One question per screen during onboarding
 
 Birthday and expected lifespan are asked on separate full screens. The first minute sets the tone of the app, and a slow, deliberate sequence fits the subject better than a form. It's also more comfortable on a small screen.
+
+### Expected lifespan in whole years
+
+The user picks their expected age in whole years, from 1 to 120, starting at 80. Suggesting a number from national life-expectancy tables would add a dataset and a country picker, and it would still be an estimate. Letting the user choose keeps the app simple and makes the number theirs. It can be changed later.
+
+### Borrowed time
+
+If someone outlives the age they chose, the app doesn't break or nag them to raise the number. The top bulb is empty, the stream stops and the hourglass sits still, with the line "Every week now is borrowed." The Sunday ritual keeps working, and new weeks keep settling on top of the strata.
 
 ### Tail End counters
 
@@ -111,9 +122,33 @@ Vitest shares Vite's config and transform pipeline, so tests run the same code t
 
 The app is meant to be opened on a phone, often on a Sunday, possibly offline. Installing it as a PWA puts it on the home screen, and the service worker makes it work without a connection.
 
+### A pure domain layer
+
+All of the app's rules live in `src/domain` as plain functions with no React and no storage: how much of a life has passed, which week a date belongs to, whether the ritual is open, and how the strata are laid out. Each function takes the current time as an argument instead of reading the clock, so tests can pin exact moments, like the last millisecond of a Sunday. The rules the app depends on most are also the easiest to test.
+
+### date-fns
+
+Week boundaries, time zones and daylight saving time are easy to get subtly wrong with the native `Date` API. date-fns provides tested helpers for exactly these operations and is tree-shakeable, so only the functions used end up in the bundle. The newer Temporal API was considered, but it would still need a polyfill for full browser support.
+
+### Zustand with persistence
+
+App state lives in a small Zustand store, and its persist middleware saves it to localStorage. The stored data has a schema version, so future changes to its shape can be migrated instead of breaking existing users' history. The data is small (a few thousand weeks at most), so a full database like IndexedDB isn't needed.
+
+### No router
+
+The app has no meaningful URLs: it has onboarding, a home screen and a few sheets. Screens are driven by app state instead of a routing library. Opening a sheet pushes a browser history entry, so the Android back gesture closes the sheet instead of leaving the app.
+
+### A canvas-rendered hourglass
+
+The hourglass is drawn with the Canvas 2D API, which handles a constantly animated scene cheaply on phones. Because a canvas is invisible to assistive technology, the same information is provided as text for screen readers. The animation pauses while the tab is hidden, and it becomes a still image when the operating system asks for reduced motion.
+
 ### Continuous integration
 
-GitHub Actions runs lint, format check, typecheck, tests and a production build on every push and pull request, so the main branch is always in a releasable state.
+GitHub Actions runs lint, format check, typecheck, tests and a production build on every pull request and on every push to `develop` and `main`, so both branches are always in a releasable state.
+
+### Branching
+
+Work happens on feature branches, one per milestone. Each is merged into `develop` through a pull request, and `develop` is merged into `main` through another pull request. `main` only ever receives reviewed, CI-verified changes.
 
 ### LF line endings
 
