@@ -68,6 +68,14 @@ Weeks lived before the user first opened the app are shown in a separate, fainte
 
 Users can write a sealed note to a specific future week. The note glints as a grain in the top bulb and opens once that week arrives. It gives the future bulb meaning beyond "time you're losing": it also holds things to look forward to.
 
+- **Writing.** Letters are written from the menu that appears when the glass is tapped, and hold up to 2,000 characters: about a page, enough for a real letter without turning into a journal. The button says "Seal it", echoing "Keep it" and "Let it go" from the ritual.
+- **Choosing the week.** Presets (next birthday, in a year, in five years, in ten years) cover the common cases with their dates shown, and "On a date" uses the same three fields as onboarding for anniversaries and other specific days. The letter opens at the start of that date's week.
+- **Only within the expected lifespan.** A letter's glint sits at its week's place in the remaining sand, so a week beyond the expected age has nowhere to be. Presets that would land past it are shown but disabled.
+- **Sealed means sealed.** Until its week arrives, a letter can't be read, edited, deleted or even listed. It exists only as a glint. That keeps the act of sealing meaningful, in the same spirit as the ritual's final answers.
+- **Arrival is quiet.** When a letter arrives, a dot appears in the top-right corner and pulses in the sand color while anything is unread. Once everything is read, it becomes a still grey dot. It only appears after the first letter arrives, so that first arrival is a surprise, and then it stays as the way back to past letters.
+- **Arrived letters can be deleted, never edited.** A past self's words shouldn't be rewritten, but the user can choose to let a letter go. Unlike "Let it go" in the ritual, deleting asks for confirmation, because a letter is something that can never be written again.
+- **Glints are placed by area,** like the sand levels: a letter halfway through the remaining time sits where half of the remaining sand lies above it. Each glint's horizontal position and twinkle come from a hash of the letter's id, so they stay put between visits.
+
 ### A minimal home screen
 
 The home screen shows only the hourglass. Tapping it briefly reveals a single line of text (for example "10:12 AM of your life", which maps your lifespan onto a 24-hour day) and a menu, both of which fade away after a few seconds. A one-time hint after onboarding ("Touch the glass.") teaches the gesture without adding permanent UI.
@@ -178,6 +186,8 @@ App state lives in a small Zustand store, and its persist middleware saves it to
 ### No router
 
 The app has no meaningful URLs: it has onboarding, a home screen and a few sheets. Screens are driven by app state instead of a routing library. Opening a sheet pushes a browser history entry, so the Android back gesture closes the sheet instead of leaving the app.
+
+The home screen owns a single history entry for "a sheet is open", rather than each sheet adding its own. Moving from the menu to "Write a letter" swaps what is shown without touching history, and closing by button removes the entry again. An earlier version gave every sheet its own entry, which raced when one sheet closed as another opened.
 
 ### A canvas-rendered hourglass
 
