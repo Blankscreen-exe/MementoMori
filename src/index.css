@@ -1,58 +1,34 @@
 @import 'tailwindcss';
 
-/* Nocturne. Light and dark follow the operating system. */
+/*
+ * One theme: pure black, and pure white for everything on it. The only color
+ * is in the strata of named weeks. The glint is black: a hole in the sand.
+ */
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
-  --mm-canvas: #e9e6e0;
-  --mm-ink: #23211e;
-  --mm-muted: #6f6a63;
-  --mm-line: rgb(28 27 26 / 0.12);
-  --mm-glass: rgb(28 27 26 / 0.38);
-  --mm-sand: #000000;
-  --mm-glint: #ffffff;
-  --mm-unrecorded: #d3ccc0;
-  --mm-missed: #9a958d;
-  --mm-accent: #23211e;
-  --mm-accent-ink: #efece7;
+  --mm-canvas: #000000;
+  --mm-ink: #ffffff;
+  --mm-muted: #ffffff;
+  --mm-line: #ffffff;
+  --mm-glass: #ffffff;
+  --mm-sand: #ffffff;
+  --mm-glint: #000000;
+  --mm-unrecorded: #ffffff;
+  --mm-missed: #ffffff;
+  --mm-accent: #ffffff;
+  --mm-accent-ink: #000000;
 
-  --mm-ember: #b5623b;
-  --mm-rose: #a0606e;
-  --mm-moss: #6a8456;
-  --mm-tide: #4c7a8e;
-  --mm-dusk: #75669c;
-  --mm-ochre: #b08a38;
-  --mm-clay: #94553f;
-  --mm-sage: #7c8e80;
-  --mm-plum: #6b4460;
-  --mm-slate: #5e6e8c;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --mm-canvas: #0b0b0c;
-    --mm-ink: #dcd6cc;
-    --mm-muted: #85807a;
-    --mm-line: rgb(232 228 220 / 0.09);
-    --mm-glass: rgb(232 228 220 / 0.28);
-    --mm-sand: #ffffff;
-    --mm-glint: #000000;
-    --mm-unrecorded: #34312d;
-    --mm-missed: #5c5953;
-    --mm-accent: #dcd6cc;
-    --mm-accent-ink: #0b0b0c;
-
-    --mm-ember: #d08254;
-    --mm-rose: #c48a96;
-    --mm-moss: #8faa79;
-    --mm-tide: #72a2b6;
-    --mm-dusk: #9c8cc4;
-    --mm-ochre: #d6b060;
-    --mm-clay: #b8765c;
-    --mm-sage: #a5b8a8;
-    --mm-plum: #9a6a8c;
-    --mm-slate: #8497bc;
-  }
+  --mm-ember: #d08254;
+  --mm-rose: #c48a96;
+  --mm-moss: #8faa79;
+  --mm-tide: #72a2b6;
+  --mm-dusk: #9c8cc4;
+  --mm-ochre: #d6b060;
+  --mm-clay: #b8765c;
+  --mm-sage: #a5b8a8;
+  --mm-plum: #9a6a8c;
+  --mm-slate: #8497bc;
 }
 
 @theme inline {

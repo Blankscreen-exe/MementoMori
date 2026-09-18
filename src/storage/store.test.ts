@@ -43,6 +43,8 @@ describe('completeOnboarding', () => {
         entries: {},
         letters: [],
         hasReceivedLetter: false,
+        counters: [],
+        hiddenCounters: [],
       },
     })
   })
@@ -173,5 +175,51 @@ describe('letters', () => {
     useAppStore.getState().deleteLetter(id, NEXT_MONDAY)
     expect(useAppStore.getState().letters).toEqual([])
     expect(useAppStore.getState().hasReceivedLetter).toBe(true)
+  })
+})
+
+describe('counters', () => {
+  const FRIDAY = new Date(2026, 8, 18, 12)
+  const visits = {
+    name: '  Visits to   my parents ',
+    times: 2,
+    per: 'year',
+    end: { kind: 'age', birthYear: 1962, age: 90 },
+  } as const
+
+  it('adds a tidied custom counter', () => {
+    expect(useAppStore.getState().addCounter(visits, FRIDAY)).toBe(true)
+    expect(useAppStore.getState().counters).toEqual([
+      { ...visits, id: expect.any(String), name: 'Visits to my parents' },
+    ])
+  })
+
+  it('refuses an invalid counter', () => {
+    expect(
+      useAppStore.getState().addCounter({ ...visits, times: 0 }, FRIDAY),
+    ).toBe(false)
+    expect(useAppStore.getState().counters).toEqual([])
+  })
+
+  it('edits and deletes a custom counter', () => {
+    useAppStore.getState().addCounter(visits, FRIDAY)
+    const [{ id }] = useAppStore.getState().counters
+    useAppStore
+      .getState()
+      .updateCounter(id, { ...visits, times: 4, end: null }, FRIDAY)
+    expect(useAppStore.getState().counters).toMatchObject([
+      { id, times: 4, end: null },
+    ])
+    useAppStore.getState().deleteCounter(id)
+    expect(useAppStore.getState().counters).toEqual([])
+  })
+
+  it('hides and shows built-in counters', () => {
+    const { setCounterHidden } = useAppStore.getState()
+    setCounterHidden('full-moons', true)
+    setCounterHidden('full-moons', true)
+    expect(useAppStore.getState().hiddenCounters).toEqual(['full-moons'])
+    setCounterHidden('full-moons', false)
+    expect(useAppStore.getState().hiddenCounters).toEqual([])
   })
 })

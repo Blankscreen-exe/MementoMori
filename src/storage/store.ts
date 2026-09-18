@@ -1,6 +1,13 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import {
+  normalizeCounter,
+  validateCounter,
+  type BuiltInCounter,
+  type CounterInput,
+  type CustomCounter,
+} from '../domain/counters'
+import {
   deliveryFor,
   hasArrived,
   validateLetterBody,
@@ -28,6 +35,9 @@ export interface PersistedState {
    * even after every arrived letter is gone.
    */
   hasReceivedLetter: boolean
+  counters: CustomCounter[]
+  /** Built-in counters the user chose to hide. */
+  hiddenCounters: BuiltInCounter[]
 }
 
 interface Actions {
@@ -44,6 +54,12 @@ interface Actions {
   openLetter: (id: string, now: Date) => void
   /** Deletes an arrived letter. Sealed letters can't be deleted. */
   deleteLetter: (id: string, now: Date) => void
+  /** Adds a custom counter. Returns false if it isn't valid. */
+  addCounter: (input: CounterInput, now: Date) => boolean
+  /** Replaces a custom counter. Returns false if the new version isn't valid. */
+  updateCounter: (id: string, input: CounterInput, now: Date) => boolean
+  deleteCounter: (id: string) => void
+  setCounterHidden: (counter: BuiltInCounter, hidden: boolean) => void
 }
 
 export type AppState = PersistedState & Actions
@@ -55,6 +71,8 @@ export const initialState: PersistedState = {
   entries: {},
   letters: [],
   hasReceivedLetter: false,
+  counters: [],
+  hiddenCounters: [],
 }
 
 export const useAppStore = create<AppState>()(
@@ -101,6 +119,31 @@ export const useAppStore = create<AppState>()(
             (letter) => letter.id !== id || !hasArrived(letter, now),
           ),
         })),
+      addCounter: (input, now) => {
+        if (validateCounter(input, now) !== null) return false
+        const counter = { id: crypto.randomUUID(), ...normalizeCounter(input) }
+        set(({ counters }) => ({ counters: [...counters, counter] }))
+        return true
+      },
+      updateCounter: (id, input, now) => {
+        if (validateCounter(input, now) !== null) return false
+        set(({ counters }) => ({
+          counters: counters.map((counter) =>
+            counter.id === id ? { id, ...normalizeCounter(input) } : counter,
+          ),
+        }))
+        return true
+      },
+      deleteCounter: (id) =>
+        set(({ counters }) => ({
+          counters: counters.filter((counter) => counter.id !== id),
+        })),
+      setCounterHidden: (counter, hidden) =>
+        set(({ hiddenCounters }) => ({
+          hiddenCounters: hidden
+            ? [...new Set([...hiddenCounters, counter])]
+            : hiddenCounters.filter((kind) => kind !== counter),
+        })),
     }),
     {
       name: STORAGE_KEY,
@@ -114,6 +157,8 @@ export const useAppStore = create<AppState>()(
         entries,
         letters,
         hasReceivedLetter,
+        counters,
+        hiddenCounters,
       }): PersistedState => ({
         profile,
         firstWeek,
@@ -121,6 +166,8 @@ export const useAppStore = create<AppState>()(
         entries,
         letters,
         hasReceivedLetter,
+        counters,
+        hiddenCounters,
       }),
     },
   ),
