@@ -11,6 +11,10 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        // Precache the Latin font files so the app keeps its typeface offline.
+        globPatterns: ['**/*.{js,css,html,svg}', '**/*-latin-*.woff2'],
+      },
       manifest: {
         name: 'Memento Mori',
         short_name: 'Memento Mori',

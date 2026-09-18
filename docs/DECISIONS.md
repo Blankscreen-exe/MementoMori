@@ -14,6 +14,14 @@ The amount of sand in each bulb always matches the real ratio of time lived to t
 
 At the scale of a lifetime, one second is a vanishingly small fraction, so a literal one-grain-per-unit model would either look frozen or need thousands of particles. Separating the animation (always flowing) from the data (always accurate) keeps the hourglass alive without misrepresenting anything.
 
+The stream itself is a fine continuous trickle, with one slightly larger grain dropped at the start of every second. It reads as a real hourglass while keeping the one-second rhythm.
+
+### Sand is measured by area, not height
+
+A bulb is narrow near the neck and wide at the ends, so filling it to 40% of its height would hold far less than 40% of its sand. The levels are computed so that the _area_ of sand in each bulb matches the share of life it represents, using a precomputed table of the bulb's cumulative area and a binary search. The same calculation places the boundaries between strata. Tests check the result against an independent numeric integration.
+
+A side effect is that the pile can look smaller than expected: 40% of a bulb's sand only reaches a modest height, because the bottom of the bulb is its widest part. That is the honest picture.
+
 ### Tilting moves sand, never time
 
 On a phone, tilting the device shifts the sand within each bulb, but sand never travels back up through the neck. A real hourglass can be flipped to start over; a life cannot. The interaction invites play and delivers the app's message at the same moment.
@@ -62,6 +70,18 @@ The user picks their expected age in whole years, from 1 to 120, starting at 80.
 ### Borrowed time
 
 If someone outlives the age they chose, the app doesn't break or nag them to raise the number. The top bulb is empty, the stream stops and the hourglass sits still, with the line "Every week now is borrowed." The Sunday ritual keeps working, and new weeks keep settling on top of the strata.
+
+### Slow fades between onboarding steps
+
+Each onboarding step fades out and the next fades in over 0.7 seconds. A slide would suggest a quick wizard to click through, while a slow fade matches the deliberate tone of the questions. When the operating system asks for reduced motion, steps switch instantly.
+
+### Three fields for the birthday
+
+The birthday is entered in three fields (day, month, year) instead of the browser's date picker. Native pickers look different on every platform, clash with the theme, and are slow for picking a date decades in the past. The fields are always in DD / MM / YYYY order, with a label under each one so the order is never ambiguous. Focus moves to the next field automatically once one is full, so the date can be typed in one go, and impossible dates like 31 February are rejected.
+
+### A big number for the expected age
+
+The expected age is shown as one large number with − and + buttons. It can also be dragged left or right (one year per 10 pixels) or tapped to type a value directly, so every kind of user has a comfortable way to set it. It's built as an accessible spin button: screen readers announce it as "80 years", and the arrow, Page Up/Down, Home and End keys all work.
 
 ### Tail End counters
 
@@ -114,6 +134,14 @@ Utility classes keep the styles next to the markup and remove the need to name o
 
 The official Vite template ships with oxlint, a Rust-based linter that is much faster than ESLint and needs very little configuration. Prettier handles formatting, and its Tailwind plugin sorts class names consistently.
 
+### Self-hosted fonts
+
+Cormorant Garamond is bundled with the app through the `@fontsource` package instead of being loaded from Google Fonts. The installed app works fully offline with the right typeface, and visitors' browsers never contact a third party. That keeps the app's privacy promise literally true.
+
+### Theme tokens as CSS variables
+
+All colors are CSS variables that switch with the operating system's light or dark setting, and Tailwind exposes them as named utilities (`bg-canvas`, `text-ink`, `text-muted`). Components never mention a mode: they use `text-ink`, and the right value applies automatically. The canvas-drawn hourglass can read the same variables, so there's a single source of truth.
+
 ### Vitest + Testing Library, without globals
 
 Vitest shares Vite's config and transform pipeline, so tests run the same code the app does. Test globals are disabled, so each test file imports `describe`, `it` and `expect` explicitly. That makes dependencies visible and keeps the global scope clean.
@@ -140,7 +168,15 @@ The app has no meaningful URLs: it has onboarding, a home screen and a few sheet
 
 ### A canvas-rendered hourglass
 
-The hourglass is drawn with the Canvas 2D API, which handles a constantly animated scene cheaply on phones. Because a canvas is invisible to assistive technology, the same information is provided as text for screen readers. The animation pauses while the tab is hidden, and it becomes a still image when the operating system asks for reduced motion.
+The hourglass is drawn with the Canvas 2D API, which handles a constantly animated scene cheaply on phones. Because a canvas is invisible to assistive technology, the same information is provided as text for screen readers ("40% of your expected life has passed, and about 2,486 weeks remain"). The animation pauses while the tab is hidden, and it becomes a still image when the operating system asks for reduced motion.
+
+The drawing is split into three layers of code:
+
+- **Geometry** (`geometry.ts`) is pure math: the glass shape and the area calculations, fully unit-tested.
+- **Rendering** (`render.ts`) turns a scene description into canvas calls. Colors are read from the theme's CSS variables, so the canvas always matches the current mode.
+- **The component** (`Hourglass.tsx`) owns the animation loop, resizing, pausing and user preferences. It keeps the latest data in a ref, so new data doesn't restart the loop.
+
+On phones, the sand leans with the device's roll. On desktops with a mouse, it leans with the pointer's position instead, so the effect can be seen there too. iOS only reports device orientation after the user grants permission, so the app asks on the first tap of the glass, which is also when the hint retires.
 
 ### Continuous integration
 
