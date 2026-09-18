@@ -40,6 +40,7 @@ describe('completeOnboarding', () => {
         profile: { birthDate: '1994-05-12', expectedAge: 80 },
         firstWeek: '2026-09-20',
         hasTouchedGlass: false,
+        entries: {},
       },
     })
   })
@@ -72,5 +73,36 @@ describe('rehydration', () => {
       profile: { birthDate: '1994-05-12', expectedAge: 80 },
       hasTouchedGlass: false,
     })
+  })
+})
+
+describe('recordWeek', () => {
+  const SUNDAY = new Date(2026, 8, 20, 21)
+  const named = { outcome: 'named', name: 'moved', color: 'tide' } as const
+
+  it('records the answer for this Sunday', () => {
+    expect(useAppStore.getState().recordWeek('2026-09-20', named, SUNDAY)).toBe(
+      true,
+    )
+    expect(useAppStore.getState().entries).toEqual({ '2026-09-20': named })
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
+    expect(stored.state.entries).toEqual({ '2026-09-20': named })
+  })
+
+  it('never overwrites an answer', () => {
+    const { recordWeek } = useAppStore.getState()
+    recordWeek('2026-09-20', named, SUNDAY)
+    expect(recordWeek('2026-09-20', { outcome: 'released' }, SUNDAY)).toBe(
+      false,
+    )
+    expect(useAppStore.getState().entries['2026-09-20']).toEqual(named)
+  })
+
+  it('refuses an answer that arrives after Sunday midnight', () => {
+    const justAfter = new Date(2026, 8, 21, 0, 0, 5)
+    expect(
+      useAppStore.getState().recordWeek('2026-09-20', named, justAfter),
+    ).toBe(false)
+    expect(useAppStore.getState().entries).toEqual({})
   })
 })

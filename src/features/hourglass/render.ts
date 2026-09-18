@@ -72,16 +72,18 @@ function pileBoundaryAt(scene: Scene, share: number, x: number): number {
   return pileSurfaceY(glass, share * lived) + tilt * dx * share - mound
 }
 
-function layerColor(layer: Layer, palette: Palette): string {
+export function layerColor(layer: Layer, palette: Palette): string {
   switch (layer.kind) {
     case 'unrecorded':
       return palette.unrecorded
+    // A released week was let go on purpose, so it settles as plain sand.
+    // Grey is reserved for weeks that were never answered.
     case 'current':
+    case 'released':
       return palette.sand
     case 'named':
       return layer.color ? palette.strata[layer.color] : palette.sand
     case 'missed':
-    case 'released':
       return palette.missed
   }
 }

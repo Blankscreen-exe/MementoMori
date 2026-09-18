@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { initialState, useAppStore } from '../../storage/store'
-import { Home, REVEAL_MS } from './Home'
+import { Home, REVEAL_MS, SETTLE_MS, type SettledWeek } from './Home'
 
 const profile = { birthDate: '1994-05-12', expectedAge: 80 }
 
@@ -13,9 +13,17 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-function renderAt(now: Date, p = profile) {
+function renderAt(now: Date, p = profile, settled?: SettledWeek) {
   vi.useFakeTimers({ now, toFake: ['Date', 'setTimeout', 'clearTimeout'] })
-  render(<Home profile={p} firstWeek="2026-09-20" />)
+  render(
+    <Home
+      profile={p}
+      firstWeek="2026-09-20"
+      entries={{}}
+      now={now}
+      settled={settled}
+    />,
+  )
 }
 
 const glass = () => screen.getByRole('button', { name: /hourglass/i })
@@ -66,5 +74,29 @@ describe('Home', () => {
     expect(glass()).toHaveAccessibleName(
       'An hourglass that has run out. Every week now is borrowed.',
     )
+  })
+
+  describe('after the ritual', () => {
+    const settled: SettledWeek = { name: 'moved to Lisbon', color: 'tide' }
+
+    it('shows the new name in its color while it settles', () => {
+      renderAt(new Date(2026, 8, 20, 21), profile, settled)
+      const status = screen.getByRole('status')
+      expect(status).toHaveTextContent('moved to Lisbon')
+      expect(status).toHaveStyle({ color: 'var(--mm-tide)' })
+      expect(status).toHaveClass('opacity-100')
+      expect(screen.getByText('Touch the glass.')).toHaveClass('opacity-0')
+
+      act(() => vi.advanceTimersByTime(SETTLE_MS))
+      expect(status).toHaveClass('opacity-0')
+      expect(screen.getByText('Touch the glass.')).toHaveClass('opacity-100')
+    })
+
+    it('gives way to the time of day on touch', () => {
+      renderAt(new Date(2026, 8, 20, 21), profile, settled)
+      fireEvent.click(glass())
+      expect(screen.getByRole('status')).toHaveClass('opacity-0')
+      expect(timeOfLife()).toHaveClass('opacity-100')
+    })
   })
 })

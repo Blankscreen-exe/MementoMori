@@ -47,6 +47,19 @@ The prompt stays available for the rest of that Sunday, until the user either na
 
 A week runs Monday to Sunday and belongs to the Sunday that ends it, so the ritual always names the week that is just finishing.
 
+### How the ritual works
+
+- **It blocks the app.** On a Sunday, the app opens to the prompt and nothing else, until the week is named or let go. A "Not now" button would offer an easy way to avoid the question, which defeats its purpose.
+- **A name is a short phrase.** Up to 40 characters, trimmed and with repeated spaces collapsed. A single word felt too narrow for weeks like "moved to Lisbon", and the limit still forces the week to be distilled.
+- **A color must be chosen.** None is preselected, and "Keep it" stays disabled until both a name and a color are chosen. A default would make most strata the same tone, and choosing is part of reflecting on the week.
+- **"Let it go" doesn't ask for confirmation.** An "Are you sure?" dialog would undercut the gravity the prompt sets up. The button sits quietly below "Keep it", so it's hard to hit by accident.
+- **The answer settles into the sand.** After "Keep it", the prompt fades out and the hourglass fades in with the week's name shown underneath, in its color, for a few seconds.
+- **Answers are checked at the moment of saving.** If someone is still typing when Sunday ends, the answer is refused and the app moves on to Monday. Otherwise it would be filed under the next week.
+
+### Released weeks are plain sand
+
+A week the user chose to let go settles as uncolored sand, while a week that was never answered is grey. Facing the question and deciding to let the week pass is different from not showing up, so the strata tell three stories: named, released and missed.
+
 ### Grey means "missed", not "before"
 
 Weeks lived before the user first opened the app are shown in a separate, fainter tone. Without that distinction, a 30-year-old's bottom bulb would be almost entirely grey on day one, burying their future strata and diluting what grey means. Grey is reserved for weeks the user had the chance to name and didn't.
