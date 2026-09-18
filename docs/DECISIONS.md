@@ -153,3 +153,12 @@ Work happens on feature branches, one per milestone. Each is merged into `develo
 ### LF line endings
 
 A `.gitattributes` file forces LF line endings in the repository. Without it, Windows checkouts can convert files to CRLF, and Prettier's format check then fails locally even though CI passes.
+
+### Deployment on Vercel
+
+The app is deployed on Vercel. `main` is the production branch, and every other branch gets a preview deployment, so each pull request can be tried out before it's merged.
+
+Vercel's default caching is overridden in `vercel.json` in two places:
+
+- **The service worker and manifest are always revalidated.** If a browser or CDN cached an old `sw.js`, users could be stuck on an outdated version of the app long after a new deploy.
+- **Built assets are cached forever.** Files in `/assets` have a content hash in their names, so a changed file always gets a new URL, and the old one can safely be cached indefinitely.
