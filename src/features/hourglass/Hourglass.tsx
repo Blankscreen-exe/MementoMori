@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { remainingShareOf, type Letter } from '../../domain/letters'
 import {
   isBorrowedTime,
   lifeFraction,
@@ -13,6 +14,8 @@ import {
   advanceStream,
   drawHourglass,
   readPalette,
+  seedOf,
+  type Glint,
   type Grain,
   type Scene,
 } from './render'
@@ -22,13 +25,20 @@ interface Props {
   profile: Profile
   firstWeek: WeekKey
   entries: WeekEntries
+  letters: Letter[]
   now: Date
 }
 
 /** Longest frame step, so a stalled tab doesn't make grains jump. */
 const MAX_FRAME_MS = 50
 
-export function Hourglass({ profile, firstWeek, entries, now }: Props) {
+export function Hourglass({
+  profile,
+  firstWeek,
+  entries,
+  letters,
+  now,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const tiltTarget = useTiltTarget()
 
@@ -37,14 +47,22 @@ export function Hourglass({ profile, firstWeek, entries, now }: Props) {
     () => buildStrata(profile, { now, firstWeek, entries }),
     [profile, firstWeek, entries, now],
   )
+  const glints = useMemo(
+    () =>
+      letters.flatMap((letter): Glint[] => {
+        const share = remainingShareOf(letter, profile, now)
+        return share === null ? [] : [{ share, seed: seedOf(letter.id) }]
+      }),
+    [letters, profile, now],
+  )
 
   // The render loop reads the latest data from here instead of restarting.
-  const data = useRef({ lived, layers })
+  const data = useRef({ lived, layers, glints })
   const redraw = useRef<() => void>(() => {})
   useEffect(() => {
-    data.current = { lived, layers }
+    data.current = { lived, layers, glints }
     redraw.current()
-  }, [lived, layers])
+  }, [lived, layers, glints])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -69,8 +87,10 @@ export function Hourglass({ profile, firstWeek, entries, now }: Props) {
       layers: data.current.layers,
       tilt,
       grains,
+      glints: data.current.glints,
     })
-    const render = () => drawHourglass(ctx, scene(), palette, width, height)
+    const render = (time = 0) =>
+      drawHourglass(ctx, scene(), palette, width, height, time)
 
     const tick = (time: number) => {
       const dt = lastTime ? Math.min(time - lastTime, MAX_FRAME_MS) : 16
@@ -79,7 +99,7 @@ export function Hourglass({ profile, firstWeek, entries, now }: Props) {
       const next = advanceStream(scene(), dt, time, lastSecond)
       grains = next.grains
       lastSecond = next.second
-      render()
+      render(time)
       frame = requestAnimationFrame(tick)
     }
 
@@ -148,7 +168,7 @@ export function Hourglass({ profile, firstWeek, entries, now }: Props) {
 
   const description = isBorrowedTime(profile, now)
     ? 'An hourglass that has run out. Every week now is borrowed.'
-    : `An hourglass. ${Math.round(lived * 100)}% of your expected life has passed, and about ${weeksRemaining(profile, now).toLocaleString('en')} weeks remain.`
+    : `An hourglass. ${Math.round(lived * 100)}% of your expected life has passed, and about ${weeksRemaining(profile, now).toLocaleString('en')} weeks remain.${glints.length > 0 ? ' Something glints in the sand.' : ''}`
 
   return (
     <canvas
