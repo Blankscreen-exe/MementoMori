@@ -108,6 +108,13 @@ The expected age is shown as one large number with − and + buttons. It can als
 
 Big totals like "2,000 weeks" are abstract. Counting things that actually repeat, like summers or visits home, makes the remaining time concrete. Users can define their own counters (for example "I see my parents twice a year").
 
+- **Built-ins plus custom ones.** Summers, Sundays, birthdays and full moons are computed from the user's own dates, so the screen means something from the first visit. Any of them can be hidden and shown again.
+- **Custom counters are "N times a week, month or year".** One number and a unit covers everything from weekly calls to yearly trips.
+- **They can end before the user does.** Visits to parents are limited by the parents' lifetime, not only the user's, so a counter can run "until they turn 90 (born 1962)" or until a date. Only a birth year is asked for, so the middle of that year stands in for the birthday. Without an end, a counter runs to the user's expected age, and it never runs past it.
+- **A number, plus dots when there are few.** Up to 200 remaining, one dot per occurrence is drawn under the number: 51 visits become 51 dots you can see. Beyond that, a field of dots stops meaning anything, so 2,486 Sundays stays a number.
+- **Counters can be edited and deleted freely.** Unlike the ritual's answers or a letter's words, a counter is an estimate about the future, and it should change when life does.
+- **How each is counted.** Sundays and birthdays are counted exactly. The birthday at the expected age itself isn't counted. Summers are counted by midsummer on 21 June, which is within one of the right answer in either hemisphere. Full moons use a known full moon and the average lunar cycle of 29.53 days. Custom counters spread their frequency evenly over the time left.
+
 ## Visual design
 
 ### Nocturne

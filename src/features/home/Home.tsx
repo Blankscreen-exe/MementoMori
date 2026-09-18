@@ -15,6 +15,7 @@ import { cn } from '../../ui/cn'
 import { fadeClass, useFade } from '../../ui/fade'
 import { Sheet } from '../../ui/Sheet'
 import { useBackToClose } from '../../ui/useBackToClose'
+import { Counters } from '../counters/Counters'
 import { Hourglass } from '../hourglass/Hourglass'
 import { requestTiltPermission } from '../hourglass/tilt'
 import { LetterList } from '../letters/LetterList'
@@ -35,7 +36,7 @@ interface Message {
   color?: StrataColor
 }
 
-type SheetKind = 'menu' | 'write' | 'letters'
+type SheetKind = 'menu' | 'write' | 'letters' | 'counters'
 
 interface Props {
   profile: Profile
@@ -61,6 +62,12 @@ export function Home({ profile, firstWeek, entries, now, settled }: Props) {
   const sealLetter = useAppStore((state) => state.sealLetter)
   const openLetter = useAppStore((state) => state.openLetter)
   const deleteLetter = useAppStore((state) => state.deleteLetter)
+  const counters = useAppStore((state) => state.counters)
+  const hiddenCounters = useAppStore((state) => state.hiddenCounters)
+  const addCounter = useAppStore((state) => state.addCounter)
+  const updateCounter = useAppStore((state) => state.updateCounter)
+  const deleteCounter = useAppStore((state) => state.deleteCounter)
+  const setCounterHidden = useAppStore((state) => state.setCounterHidden)
 
   const [revealed, setRevealed] = useState(false)
   const [sheet, setSheet] = useState<SheetKind | null>(null)
@@ -208,6 +215,13 @@ export function Home({ profile, firstWeek, entries, now, settled }: Props) {
             >
               Write a letter
             </button>
+            <button
+              type="button"
+              onClick={() => setSheet('counters')}
+              className="text-[2rem] font-light outline-none focus-visible:underline focus-visible:underline-offset-8"
+            >
+              Counters
+            </button>
           </nav>
         </Sheet>
       )}
@@ -223,6 +237,21 @@ export function Home({ profile, firstWeek, entries, now, settled }: Props) {
                 showMessage({ text: 'Sealed.' })
               }
             }}
+          />
+        </Sheet>
+      )}
+
+      {sheet === 'counters' && (
+        <Sheet label="Counters" onClose={() => setSheet(null)}>
+          <Counters
+            profile={profile}
+            now={now}
+            counters={counters}
+            hiddenCounters={hiddenCounters}
+            onAdd={(input) => addCounter(input, new Date())}
+            onUpdate={(id, input) => updateCounter(id, input, new Date())}
+            onDelete={deleteCounter}
+            onSetHidden={setCounterHidden}
           />
         </Sheet>
       )}

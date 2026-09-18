@@ -179,6 +179,15 @@ describe('Home', () => {
       ])
     })
 
+    it('opens the counters from the menu', () => {
+      renderAt(FRIDAY)
+      fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Counters' }))
+      expect(
+        screen.getByRole('dialog', { name: 'Counters' }),
+      ).toHaveTextContent('Summers')
+    })
+
     it('closes a sheet with the back gesture', async () => {
       // Real timers: the browser's history traversal is asynchronous.
       vi.useFakeTimers({ now: FRIDAY, toFake: ['Date'] })

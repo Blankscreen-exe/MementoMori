@@ -32,6 +32,13 @@ export function isBorrowedTime(profile: Profile, now: Date): boolean {
   return now.getTime() >= expectedDeathOf(profile).getTime()
 }
 
+/** The next birthday after `now`. A birthday that is today counts as passed. */
+export function nextBirthday(profile: Profile, now: Date): Date {
+  const birth = birthOf(profile)
+  const thisYear = addYears(birth, now.getFullYear() - birth.getFullYear())
+  return thisYear.getTime() > now.getTime() ? thisYear : addYears(thisYear, 1)
+}
+
 export function weeksLived(profile: Profile, now: Date): number {
   return Math.max(0, differenceInWeeks(now, birthOf(profile)))
 }

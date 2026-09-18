@@ -1,5 +1,5 @@
 import { addYears, isValid, startOfDay } from 'date-fns'
-import { birthOf, expectedDeathOf, type Profile } from './life'
+import { expectedDeathOf, nextBirthday, type Profile } from './life'
 import { weekKeyOf, weekStartOfKey, type WeekKey } from './week'
 
 export const MAX_LETTER_LENGTH = 2000
@@ -38,18 +38,14 @@ const PRESET_YEARS: Record<Exclude<LetterPreset, 'next-birthday'>, number> = {
   'in-10-years': 10,
 }
 
-/** The date a preset points to. A birthday that is today counts as passed. */
+/** The date a preset points to. */
 export function presetDate(
   preset: LetterPreset,
   profile: Profile,
   now: Date,
 ): Date {
-  if (preset !== 'next-birthday') {
-    return addYears(startOfDay(now), PRESET_YEARS[preset])
-  }
-  const birth = birthOf(profile)
-  const thisYear = addYears(birth, now.getFullYear() - birth.getFullYear())
-  return thisYear.getTime() > now.getTime() ? thisYear : addYears(thisYear, 1)
+  if (preset === 'next-birthday') return nextBirthday(profile, now)
+  return addYears(startOfDay(now), PRESET_YEARS[preset])
 }
 
 export type DeliveryError = 'invalid' | 'too-soon' | 'beyond-lifespan'
