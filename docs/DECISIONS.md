@@ -8,6 +8,8 @@ A record of the key product and technical decisions behind Memento Mori, and the
 
 The classic "life in weeks" visualization is a grid of ~4,000 boxes. It's effective, but it's static and familiar. An hourglass carries the same information and adds motion, so time visibly passes while you look at it. It's a single object that people instantly understand as "time running out", and it feels physical rather than statistical.
 
+It started as a flat 2D drawing and became a low-poly 3D object after the first release (see "A low-poly 3D hourglass" below), which made it feel even more like a thing you hold.
+
 ### Sand is proportional, not literal
 
 The amount of sand in each bulb always matches the real ratio of time lived to time remaining, recalculated from the user's actual dates. One grain passes through the neck every second as a visual heartbeat, but the pile levels are never driven by the animation itself.
@@ -16,19 +18,19 @@ At the scale of a lifetime, one second is a vanishingly small fraction, so a lit
 
 The stream itself is a fine continuous trickle, with one slightly larger grain dropped at the start of every second. It reads as a real hourglass while keeping the one-second rhythm.
 
-### Sand is measured by area, not height
+### Sand is measured by volume, not height
 
-A bulb is narrow near the neck and wide at the ends, so filling it to 40% of its height would hold far less than 40% of its sand. The levels are computed so that the _area_ of sand in each bulb matches the share of life it represents, using a precomputed table of the bulb's cumulative area and a binary search. The same calculation places the boundaries between strata. Tests check the result against an independent numeric integration.
+A bulb is narrow near the neck and wide at the ends, so filling it to 40% of its height would hold far less than 40% of its sand. The levels are computed so that the amount of sand in each bulb matches the share of life it represents, using a precomputed table of the bulb's cumulative size and a binary search. In 3D that amount is volume: every slice of the faceted glass is the same polygon scaled by its radius, so volume grows with the integral of r². The 2D fallback uses area. Tests check both against an independent numeric integration.
 
 A side effect is that the pile can look smaller than expected: 40% of a bulb's sand only reaches a modest height, because the bottom of the bulb is its widest part. That is the honest picture.
 
 ### Tilting moves sand, never time
 
-On a phone, tilting the device shifts the sand within each bulb, but sand never travels back up through the neck. A real hourglass can be flipped to start over; a life cannot. The interaction invites play and delivers the app's message at the same moment.
+The hourglass leans when the phone tilts or when it's dragged like a joystick, forward, back or sideways, but never more than 20°, so it can't come close to being turned over. The sand's surface stays level as the glass leans, and sand never travels back up through the neck. A real hourglass can be flipped to start over; a life cannot. The interaction invites play and delivers the app's message at the same moment.
 
-### Painted weeks become sediment
+### Named weeks become sediment
 
-Each week can be named with a word and a color. As the weeks pass, they settle into the bottom bulb as colored strata, sized in proportion to the time they cover, so the bottom bulb becomes a geological record of the user's life. Tapping a layer shows the history of that period.
+Each week can be named. As the weeks pass, they settle into the bottom bulb, sized in proportion to the time they cover, so the pile becomes a record of the user's life. The data keeps every week's layer, ready for a planned view that shows the history of a period.
 
 This keeps every feature inside the one central metaphor, instead of adding a second visualization (such as a grid) for the data-entry features.
 
@@ -51,16 +53,16 @@ A week runs Monday to Sunday and belongs to the Sunday that ends it, so the ritu
 
 - **It blocks the app.** On a Sunday, the app opens to the prompt and nothing else, until the week is named or let go. A "Not now" button would offer an easy way to avoid the question, which defeats its purpose.
 - **A name is a short phrase.** Up to 40 characters, trimmed and with repeated spaces collapsed. A single word felt too narrow for weeks like "moved to Lisbon", and the limit still forces the week to be distilled.
-- **A color must be chosen.** None is preselected, and "Keep it" stays disabled until both a name and a color are chosen. A default would make most strata the same tone, and choosing is part of reflecting on the week.
+- **Only a name, no color.** An earlier version also asked for one of ten colors, shown as colored strata. Once all sand became pure white, a choice that showed up nowhere would have been a false promise, so it was removed. Names saved with a color before then still load; the color is simply ignored.
 - **"Let it go" doesn't ask for confirmation.** An "Are you sure?" dialog would undercut the gravity the prompt sets up. The button sits quietly below "Keep it", so it's hard to hit by accident.
-- **The answer settles into the sand.** After "Keep it", the prompt fades out and the hourglass fades in with the week's name shown underneath, in its color, for a few seconds.
+- **The answer settles into the sand.** After "Keep it", the prompt fades out and the hourglass fades in with the week's name shown underneath for a few seconds.
 - **Answers are checked at the moment of saving.** If someone is still typing when Sunday ends, the answer is refused and the app moves on to Monday. Otherwise it would be filed under the next week.
 
-### Only named weeks carry color
+### Every week is white sand
 
 The data keeps every week's story apart: named, released (the user chose "Let it go"), missed (the Sunday passed without an answer), and unrecorded (lived before the app was first used). Keeping unrecorded apart from missed matters: otherwise a 30-year-old would start with decades of "missed" weeks they never had a chance to name.
 
-On screen, only named weeks have color. Released, missed and unrecorded weeks all settle as the same white sand. An earlier design gave each its own tone (grey for missed, a faint tone for the unrecorded past), but in the final black-and-white theme, color is reserved for the weeks the user actually shaped. The distinctions stay in the data, ready for a future history view.
+On screen, all of them are the same pure white sand. Earlier designs gave each its own tone (grey for missed, a faint tone for the unrecorded past, colors for named weeks), but the final design is strictly black and white, and the hourglass reads as one object rather than a chart. Each outcome still has its own theme token, and the distinctions stay in the data, ready for a future history view.
 
 ### Letters to future weeks
 
@@ -135,11 +137,22 @@ All the sand is flat, pure white, with no grain texture. Maximum contrast makes 
 
 ### The glint is a hole in the sand
 
-A sealed letter appears as a black sparkle in the white sand. It uses the background color rather than adding a new one, which keeps the screen strictly black and white outside the strata.
+A sealed letter appears as a small black spark on the surface of the white sand. It uses the background color rather than adding a new one, which keeps the screen strictly black and white. In 3D, the sand is opaque, so a spark sits on its outer surface where it can be seen, at the height where its week lies.
 
-### A curated strata palette
+### No color at all
 
-Named weeks use a fixed palette of ten muted tones (Ember, Rose, Moss, Tide, Dusk, Ochre, Clay, Sage, Plum, Slate), tuned to glow softly against black. They are the only color in the app. A free color picker would let clashing colors turn the sediment into noise, and a curated set keeps any combination of choices looking coherent.
+For a while, named weeks were the one place color was allowed: a curated palette of ten muted tones, chosen in the ritual and shown as colored strata. When the 3D hourglass arrived, the sand became pure white throughout, and the palette went with it. The app is now black and white throughout; the only variation is the two deliberate dims above.
+
+### A low-poly 3D hourglass
+
+After the first release, the flat hourglass was replaced by a stylized 3D one: deliberately not realistic.
+
+- **Faceted glass, drawn only as its outline.** The glass is the same curve as before, spun into a 12-sided solid. Only the edges on its silhouette are drawn, the ones where one facet faces the viewer and the next faces away, so it reads as glass rather than a wireframe. Which edges those are changes as it turns, so they're recomputed every frame (a pure, tested function).
+- **A line like ink on glass.** The outline is drawn as thin camera-facing ribbons whose width varies: heaviest at the neck and the rims and on the side away from the light, a hairline on the lit flank. WebGL lines can't vary in width, which is why ribbons are used.
+- **A white frame with soft shading.** Two thin 12-sided plates and three pillars, pure white and flat-shaded under a bright ambient light and a soft key light, so faces turned away are only a little darker.
+- **Pure white sand that stays level.** Each bulb's sand is cut by a plane that stays horizontal in the world, so it settles flat when the glass leans. A white floor inside the pile keeps it looking solid when seen from above.
+- **A line of black between sand and base.** The glass sits a sliver above each plate, with a black spacer in the gap, so the white pile never melts into the white base.
+- **It turns on its own.** It rotates slowly and sways a little, keeps turning while you lean it, and springs back upright when you let go.
 
 ## Technical
 
@@ -197,17 +210,18 @@ The app has no meaningful URLs: it has onboarding, a home screen and a few sheet
 
 The home screen owns a single history entry for "a sheet is open", rather than each sheet adding its own. Moving from the menu to "Write a letter" swaps what is shown without touching history, and closing by button removes the entry again. An earlier version gave every sheet its own entry, which raced when one sheet closed as another opened.
 
-### A canvas-rendered hourglass
+### A three.js hourglass, with a 2D fallback
 
-The hourglass is drawn with the Canvas 2D API, which handles a constantly animated scene cheaply on phones. Because a canvas is invisible to assistive technology, the same information is provided as text for screen readers ("40% of your expected life has passed, and about 2,486 weeks remain"). The animation pauses while the tab is hidden, and it becomes a still image when the operating system asks for reduced motion.
+The 3D hourglass is drawn with plain three.js rather than React Three Fiber. It's one dependency instead of three, and it keeps the renderer an imperative module like the 2D one before it, easy to follow and to test. three.js is loaded lazily in its own chunk, so it downloads only once the hourglass is actually shown and doesn't slow down onboarding.
 
-The drawing is split into three layers of code:
+The code is split into layers:
 
-- **Geometry** (`geometry.ts`) is pure math: the glass shape and the area calculations, fully unit-tested.
-- **Rendering** (`render.ts`) turns a scene description into canvas calls. Colors are read from the theme's CSS variables, so the canvas always matches the current mode.
-- **The component** (`Hourglass.tsx`) owns the animation loop, resizing, pausing and user preferences. It keeps the latest data in a ref, so new data doesn't restart the loop.
+- **Geometry** (`geometry3d.ts`) is pure math: the glass shape, the volume calculations, the silhouette and the stroke widths, all unit-tested.
+- **Motion** (`motion.ts`) is pure too: the joystick-style lean, the 20° limit, the phone's tilt, the idle sway and the spring back upright.
+- **The scene** (`scene3d.ts`) turns a frame description (life lived, sparks, motion, time) into three.js objects. Colors are read from the theme's CSS variables.
+- **The component** (`Hourglass3D.tsx`) owns the animation loop, resizing, pausing, input and preferences. It keeps the latest data in a ref, so new data doesn't restart the loop, and it tells a tap (reveal the time of day) from a drag (lean the glass).
 
-On phones, the sand leans with the device's roll. On desktops with a mouse, it leans with the pointer's position instead, so the effect can be seen there too. iOS only reports device orientation after the user grants permission, so the app asks on the first tap of the glass, which is also when the hint retires.
+Because a canvas is invisible to assistive technology, the same information is provided as text for screen readers ("40% of your expected life has passed, and about 2,486 weeks remain"), shared by both versions. The animation pauses while the tab is hidden. When the operating system asks for reduced motion, the same 3D hourglass is drawn once, still and upright. Browsers without WebGL get the original 2D canvas hourglass, which is kept for exactly that. iOS only reports device orientation after the user grants permission, so the app asks on the first tap of the glass, which is also when the hint retires.
 
 ### Continuous integration
 
@@ -230,14 +244,14 @@ Vercel's default caching is overridden in `vercel.json` in two places:
 - **The service worker and manifest are always revalidated.** If a browser or CDN cached an old `sw.js`, users could be stuck on an outdated version of the app long after a new deploy.
 - **Built assets are cached forever.** Files in `/assets` have a content hash in their names, so a changed file always gets a new URL, and the old one can safely be cached indefinitely.
 
-### An icon drawn from the app's own geometry
+### An icon rendered from the 3D hourglass
 
-The app icon is the hourglass itself: white sand in the top bulb, a few falling grains, and the pile below, in white on the app's black. A script (`bun run icons`) draws it from the same glass geometry the app uses, including the area-based sand levels, and `@vite-pwa/assets-generator` renders every size from that single SVG. The icon can't drift from the app, and regenerating it is one command. Maskable and Apple icons get extra padding, so the glass stays inside the safe zone that launchers crop to.
+The app icon is the hourglass itself, rendered by the app's own 3D scene. `bun run icons` serves a one-page scene with Vite, captures a still frame in headless Chrome, and `@vite-pwa/assets-generator` makes every size from that image. The icon can't drift from what the app draws, and regenerating it is one command. Maskable and Apple icons get a little extra padding, so the hourglass stays inside the safe zone that launchers crop to.
 
 ### A black splash screen
 
 The installed app's splash screen, title bar and browser theme color are all black, the same as the app and its icon, so opening it goes from icon to splash to hourglass without a flash of another color.
 
-### Deferred: a "core sample" of recent strata
+### Deferred: a history of named weeks
 
-Because the strata are proportional to a whole life, each week is a hairline, and even years of named weeks form a thin band. The planned answer is a zoomed-in cross-section of recent strata, readable week by week, opened by tapping the pile. It is deliberately left out of the first version: new users won't have enough strata to need it for months, and it deserves its own design pass.
+Each week is a hairline of a whole life, and every week is now the same white sand, so the pile can't show which weeks were named or what they were called. The planned answer is a readable history of recent weeks and their names, opened from the pile. It is deliberately left out for now: new users won't have much history for months, and it deserves its own design pass.

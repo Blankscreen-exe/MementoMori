@@ -7,7 +7,6 @@ import {
   lifeFraction,
   type Profile,
 } from '../../domain/life'
-import type { StrataColor } from '../../domain/palette'
 import type { WeekEntries } from '../../domain/ritual'
 import type { WeekKey } from '../../domain/week'
 import { useAppStore } from '../../storage/store'
@@ -16,7 +15,7 @@ import { fadeClass, useFade } from '../../ui/fade'
 import { Sheet } from '../../ui/Sheet'
 import { useBackToClose } from '../../ui/useBackToClose'
 import { Counters } from '../counters/Counters'
-import { Hourglass } from '../hourglass/Hourglass'
+import { HourglassView } from '../hourglass/HourglassView'
 import { requestTiltPermission } from '../hourglass/tilt'
 import { LetterList } from '../letters/LetterList'
 import { WriteLetter } from '../letters/WriteLetter'
@@ -28,12 +27,6 @@ export const MESSAGE_MS = 4500
 
 export interface SettledWeek {
   name: string
-  color: StrataColor
-}
-
-interface Message {
-  text: string
-  color?: StrataColor
 }
 
 type SheetKind = 'menu' | 'write' | 'letters' | 'counters'
@@ -71,9 +64,7 @@ export function Home({ profile, firstWeek, entries, now, settled }: Props) {
 
   const [revealed, setRevealed] = useState(false)
   const [sheet, setSheet] = useState<SheetKind | null>(null)
-  const [message, setMessage] = useState<Message | null>(
-    settled ? { text: settled.name, color: settled.color } : null,
-  )
+  const [message, setMessage] = useState<string | null>(settled?.name ?? null)
   const [messageShown, setMessageShown] = useState(message !== null)
   const revealTimer = useRef<number | undefined>(undefined)
   useBackToClose(sheet !== null, () => setSheet(null))
@@ -87,7 +78,7 @@ export function Home({ profile, firstWeek, entries, now, settled }: Props) {
     return () => clearTimeout(timer)
   }, [message])
 
-  function showMessage(next: Message) {
+  function showMessage(next: string) {
     setMessage(next)
     setMessageShown(true)
   }
@@ -145,7 +136,7 @@ export function Home({ profile, firstWeek, entries, now, settled }: Props) {
         onClick={handleTouch}
         className="h-[min(68dvh,46rem)] w-full max-w-xl cursor-pointer rounded-3xl outline-none focus-visible:outline-1 focus-visible:outline-offset-8 focus-visible:outline-line"
       >
-        <Hourglass
+        <HourglassView
           profile={profile}
           firstWeek={firstWeek}
           entries={entries}
@@ -181,17 +172,12 @@ export function Home({ profile, firstWeek, entries, now, settled }: Props) {
         {message && (
           <p
             role="status"
-            style={
-              message.color
-                ? { color: `var(--mm-${message.color})` }
-                : undefined
-            }
             className={cn(
               'absolute inset-x-0 top-0 text-2xl font-light italic',
               fadingText(messageShown),
             )}
           >
-            {message.text}
+            {message}
           </p>
         )}
         <p
@@ -234,7 +220,7 @@ export function Home({ profile, firstWeek, entries, now, settled }: Props) {
             onSeal={(body, date) => {
               if (sealLetter(body, date, new Date())) {
                 setSheet(null)
-                showMessage({ text: 'Sealed.' })
+                showMessage('Sealed.')
               }
             }}
           />

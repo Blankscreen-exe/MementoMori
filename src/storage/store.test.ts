@@ -82,7 +82,7 @@ describe('rehydration', () => {
 
 describe('recordWeek', () => {
   const SUNDAY = new Date(2026, 8, 20, 21)
-  const named = { outcome: 'named', name: 'moved', color: 'tide' } as const
+  const named = { outcome: 'named', name: 'moved' } as const
 
   it('records the answer for this Sunday', () => {
     expect(useAppStore.getState().recordWeek('2026-09-20', named, SUNDAY)).toBe(

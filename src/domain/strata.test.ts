@@ -10,7 +10,7 @@ const FOUR_WEEKS_LATER = new Date(2000, 0, 31)
 describe('buildStrata', () => {
   it('lays down unrecorded, named, missed and released weeks in order', () => {
     const entries: WeekEntries = {
-      '2000-01-16': { outcome: 'named', name: 'first', color: 'ember' },
+      '2000-01-16': { outcome: 'named', name: 'first' },
       '2000-01-30': { outcome: 'released' },
     }
     const layers = buildStrata(profile, {
@@ -23,7 +23,6 @@ describe('buildStrata', () => {
       { kind: 'unrecorded', start: 0, end: expect.closeTo(0.25) },
       {
         kind: 'named',
-        color: 'ember',
         start: expect.closeTo(0.25),
         end: expect.closeTo(0.5),
       },
@@ -32,11 +31,11 @@ describe('buildStrata', () => {
     ])
   })
 
-  it('merges neighbouring weeks that look the same', () => {
+  it('merges neighbouring weeks with the same outcome', () => {
     const entries: WeekEntries = {
-      '2000-01-09': { outcome: 'named', name: 'a', color: 'moss' },
-      '2000-01-16': { outcome: 'named', name: 'b', color: 'moss' },
-      '2000-01-23': { outcome: 'named', name: 'c', color: 'rose' },
+      '2000-01-09': { outcome: 'named', name: 'a' },
+      '2000-01-16': { outcome: 'named', name: 'b' },
+      '2000-01-23': { outcome: 'released' },
     }
     const layers = buildStrata(profile, {
       now: new Date(2000, 0, 24),
@@ -44,10 +43,7 @@ describe('buildStrata', () => {
       entries,
     })
 
-    expect(layers.map((l) => [l.kind, l.color])).toEqual([
-      ['named', 'moss'],
-      ['named', 'rose'],
-    ])
+    expect(layers.map((l) => l.kind)).toEqual(['named', 'released'])
   })
 
   it('ends with the partial current week while it is unanswered', () => {

@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 
 /*
- * One theme: pure black, and pure white for everything on it. The only color
- * is in the strata of named weeks. The glint is black: a hole in the sand.
+ * One theme: pure black, and pure white for everything on it. The glint is
+ * black: a hole in the sand.
  */
 :root {
   color-scheme: dark;
@@ -18,17 +18,6 @@
   --mm-missed: #ffffff;
   --mm-accent: #ffffff;
   --mm-accent-ink: #000000;
-
-  --mm-ember: #d08254;
-  --mm-rose: #c48a96;
-  --mm-moss: #8faa79;
-  --mm-tide: #72a2b6;
-  --mm-dusk: #9c8cc4;
-  --mm-ochre: #d6b060;
-  --mm-clay: #b8765c;
-  --mm-sage: #a5b8a8;
-  --mm-plum: #9a6a8c;
-  --mm-slate: #8497bc;
 }
 
 @theme inline {
@@ -45,17 +34,6 @@
   --color-missed: var(--mm-missed);
   --color-accent: var(--mm-accent);
   --color-accent-ink: var(--mm-accent-ink);
-
-  --color-strata-ember: var(--mm-ember);
-  --color-strata-rose: var(--mm-rose);
-  --color-strata-moss: var(--mm-moss);
-  --color-strata-tide: var(--mm-tide);
-  --color-strata-dusk: var(--mm-dusk);
-  --color-strata-ochre: var(--mm-ochre);
-  --color-strata-clay: var(--mm-clay);
-  --color-strata-sage: var(--mm-sage);
-  --color-strata-plum: var(--mm-plum);
-  --color-strata-slate: var(--mm-slate);
 }
 
 @layer base {

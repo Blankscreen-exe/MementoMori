@@ -66,3 +66,28 @@ export async function requestTiltPermission(): Promise<void> {
     // Denied or dismissed: the sand simply stays level.
   }
 }
+
+export interface Orientation {
+  beta: number
+  gamma: number
+}
+
+/**
+ * The device's latest orientation in degrees, or null until one arrives (on
+ * desktops, or on iOS before permission is granted). A ref, so an animation
+ * loop can read it every frame without re-rendering React.
+ */
+export function useDeviceOrientation(): RefObject<Orientation | null> {
+  const orientation = useRef<Orientation | null>(null)
+
+  useEffect(() => {
+    const onOrientation = (event: DeviceOrientationEvent) => {
+      if (event.beta === null || event.gamma === null) return
+      orientation.current = { beta: event.beta, gamma: event.gamma }
+    }
+    window.addEventListener('deviceorientation', onOrientation)
+    return () => window.removeEventListener('deviceorientation', onOrientation)
+  }, [])
+
+  return orientation
+}

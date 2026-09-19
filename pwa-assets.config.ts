@@ -5,8 +5,8 @@ import {
 
 const background = '#000000'
 
-// The source icon already has its own dark background. Maskable and Apple
-// icons get extra dark padding so the glass stays inside their safe zones.
+// The rendered icon already has its own black background. Maskable and Apple
+// icons get extra black padding so the hourglass stays inside their safe zones.
 export default defineConfig({
   headLinkOptions: { preset: '2023' },
   preset: {
@@ -14,14 +14,14 @@ export default defineConfig({
     transparent: { ...minimal2023Preset.transparent, padding: 0 },
     maskable: {
       ...minimal2023Preset.maskable,
-      padding: 0.3,
+      padding: 0.1,
       resizeOptions: { background },
     },
     apple: {
       ...minimal2023Preset.apple,
-      padding: 0.3,
+      padding: 0.1,
       resizeOptions: { background },
     },
   },
-  images: ['public/favicon.svg'],
+  images: ['public/icon.png'],
 })
