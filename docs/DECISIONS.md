@@ -84,6 +84,15 @@ Every time the app is launched, it opens on a black screen with a single white l
 - **A shuffled deck, not a coin toss.** The prompts are shuffled once, like a deck of cards, and dealt in that order. The position is saved, so none repeats until all 1,000 have been seen. A fresh deck never starts with the one just shown. Truly random picks would start repeating within a few dozen launches.
 - **Once per launch.** A message is drawn once per page load, outside React, so rendering twice (as React does in development) can never skip one. Returning to the app from the background doesn't count as a launch.
 
+### A nudge after an hour on screen
+
+After every hour the app spends on screen, the same black overlay returns with one line: "Staring at your remaining life isn’t going to solve anything." The app is meant to send people back to their lives, not to hold their attention.
+
+- **Only time on screen counts.** The hour pauses while the app is in the background and resumes when it comes back, so leaving it open in another tab doesn't trigger it.
+- **It repeats every further hour.** One reminder is easy to wave away.
+- **It sits over the current screen instead of replacing it.** A letter being written or a ritual in progress is still there after the tap.
+- **Never during onboarding.** Someone still answering the first questions hasn't been staring at anything yet.
+
 ### A minimal home screen
 
 The home screen shows only the hourglass. Tapping it briefly reveals a single line of text and a menu, both of which fade away after a few seconds. The line counts the days left ("17,403 days left"), or, past the expected age, the days borrowed so far. It first mapped the lifespan onto a 24-hour day ("10:12 AM of your life"), which was poetic but had to be decoded; a plain count of days is immediate, and a day is a unit everyone feels. A one-time hint after onboarding ("Touch the glass.") teaches the gesture without adding permanent UI.
