@@ -3,6 +3,7 @@ import type { Layer } from '../../domain/strata'
 import { layerColor, seedOf, type Palette } from './render'
 
 const palette: Palette = {
+  canvas: 'canvas',
   glass: 'glass',
   sand: 'sand',
   glint: 'glint',

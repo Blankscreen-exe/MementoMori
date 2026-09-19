@@ -8,6 +8,7 @@ import {
 } from './geometry'
 
 export interface Palette {
+  canvas: string
   glass: string
   sand: string
   glint: string
@@ -20,6 +21,7 @@ export function readPalette(root: Element = document.documentElement): Palette {
   const styles = getComputedStyle(root)
   const token = (name: string) => styles.getPropertyValue(`--mm-${name}`).trim()
   return {
+    canvas: token('canvas'),
     glass: token('glass'),
     sand: token('sand'),
     glint: token('glint'),
