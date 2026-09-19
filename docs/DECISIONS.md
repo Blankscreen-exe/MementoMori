@@ -76,6 +76,14 @@ Users can write a sealed note to a specific future week. The note glints as a gr
 - **Arrived letters can be deleted, never edited.** A past self's words shouldn't be rewritten, but the user can choose to let a letter go. Unlike "Let it go" in the ritual, deleting asks for confirmation, because a letter is something that can never be written again.
 - **Glints are placed by area,** like the sand levels: a letter halfway through the remaining time sits where half of the remaining sand lies above it. Each glint's horizontal position and twinkle come from a hash of the letter's id, so they stay put between visits.
 
+### A reflection each time the app opens
+
+Every time the app is launched, it opens on a black screen with a single white line: a question or a short reflection about what matters, like "Who haven’t you called in a while?" A tap moves on, or it fades by itself after eight seconds. It comes before everything else, including the Sunday ritual, so it sets the mood for naming the week. It isn't shown on the very first visit, before anything is set up.
+
+- **1,000 original prompts, no quotes.** They are written for the app in one voice, across ten themes of 100 (people, time, work, body, presence, courage, gratitude, forgiveness, meaning and mortality). Avoiding famous quotes avoids attribution questions and keeps the tone consistent. Every prompt stands on its own, since any of them can appear first. Tests check the count, that none repeat, and that each is short and complete.
+- **A shuffled deck, not a coin toss.** The prompts are shuffled once, like a deck of cards, and dealt in that order. The position is saved, so none repeats until all 1,000 have been seen. A fresh deck never starts with the one just shown. Truly random picks would start repeating within a few dozen launches.
+- **Once per launch.** A message is drawn once per page load, outside React, so rendering twice (as React does in development) can never skip one. Returning to the app from the background doesn't count as a launch.
+
 ### A minimal home screen
 
 The home screen shows only the hourglass. Tapping it briefly reveals a single line of text and a menu, both of which fade away after a few seconds. The line counts the days left ("17,403 days left"), or, past the expected age, the days borrowed so far. It first mapped the lifespan onto a 24-hour day ("10:12 AM of your life"), which was poetic but had to be decoded; a plain count of days is immediate, and a day is a unit everyone feels. A one-time hint after onboarding ("Touch the glass.") teaches the gesture without adding permanent UI.

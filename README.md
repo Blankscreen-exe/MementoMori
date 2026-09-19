@@ -19,6 +19,7 @@ Most "life in weeks" apps show a static grid of 4,000 boxes. This one is a low-p
 - **Letters to the future.** Write to a week years from now. Until then it's sealed: it can't be read, edited or even listed, and appears only as a black spark in the sand. When its week arrives, a quiet dot appears in the corner.
 - **What's left.** Counters turn abstract time into things you can picture, like 47 summers, 2,486 Sundays, or 51 more visits to your parents, drawn as dots when there are few enough to count.
 - **The days left.** Tap the glass: _"17,403 days left."_
+- **A moment before you begin.** Every launch opens on one of 1,000 original prompts, like _"Who haven’t you called in a while?"_, dealt from a shuffled deck so none repeats until you’ve seen them all.
 
 <p align="center">
   <img src="docs/screenshots/onboarding.png" width="220" alt="Onboarding: 'When were you born?' with day, month and year fields" />
