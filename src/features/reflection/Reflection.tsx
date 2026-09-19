@@ -13,8 +13,9 @@ interface Props {
 }
 
 /**
- * A single reflection on a black screen, shown when the app opens. A tap
- * anywhere moves on; otherwise it fades away by itself.
+ * A single message on a black screen: a reflection when the app opens, or a
+ * nudge after an hour on screen. A tap anywhere moves on; otherwise it fades
+ * away by itself.
  */
 export function Reflection({ text, onDone }: Props) {
   const { visible, fadeOutThen } = useFade()

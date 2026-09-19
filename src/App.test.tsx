@@ -1,7 +1,7 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import App from './App'
+import App, { STARING_NUDGE_MS } from './App'
 import { initialState, useAppStore } from './storage/store'
 
 const FRIDAY = new Date(2026, 8, 18, 12)
@@ -99,6 +99,42 @@ describe('App', () => {
         screen.getByRole('button', { name: /called in a while/ }),
       )
       expect(ritualHeading()).toBeInTheDocument()
+    })
+  })
+
+  describe('after an hour on screen', () => {
+    const NUDGE = /Staring at your remaining life/
+
+    it('lays a nudge over the hourglass, which a tap clears', () => {
+      vi.useFakeTimers({
+        now: FRIDAY,
+        toFake: ['Date', 'setTimeout', 'clearTimeout'],
+      })
+      onboarded()
+      render(<App />)
+
+      act(() => vi.advanceTimersByTime(STARING_NUDGE_MS - 1))
+      expect(screen.queryByText(NUDGE)).not.toBeInTheDocument()
+      act(() => vi.advanceTimersByTime(1))
+      const nudge = screen.getByRole('button', { name: NUDGE })
+      // The screen underneath stays mounted, so nothing in progress is lost.
+      expect(
+        screen.getByRole('button', { name: /hourglass/i }),
+      ).toBeInTheDocument()
+
+      fireEvent.click(nudge)
+      expect(screen.queryByText(NUDGE)).not.toBeInTheDocument()
+    })
+
+    it('never interrupts onboarding', () => {
+      vi.useFakeTimers({
+        now: FRIDAY,
+        toFake: ['Date', 'setTimeout', 'clearTimeout'],
+      })
+      render(<App />)
+
+      act(() => vi.advanceTimersByTime(2 * STARING_NUDGE_MS))
+      expect(screen.queryByText(NUDGE)).not.toBeInTheDocument()
     })
   })
 
