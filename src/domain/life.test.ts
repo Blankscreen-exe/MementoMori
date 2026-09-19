@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  daysBorrowed,
+  daysRemaining,
   expectedDeathOf,
-  formatTimeOfDay,
   isBorrowedTime,
-  lifeAsTimeOfDay,
   lifeFraction,
   validateBirthDate,
   validateExpectedAge,
@@ -51,30 +51,22 @@ describe('weeksLived / weeksRemaining', () => {
   })
 })
 
-describe('lifeAsTimeOfDay', () => {
-  it('maps a life onto a 24-hour day', () => {
-    expect(lifeAsTimeOfDay(0)).toEqual({ hours: 0, minutes: 0 })
-    expect(lifeAsTimeOfDay(0.425)).toEqual({ hours: 10, minutes: 12 })
-    expect(lifeAsTimeOfDay(0.5)).toEqual({ hours: 12, minutes: 0 })
-    expect(lifeAsTimeOfDay(1)).toEqual({ hours: 24, minutes: 0 })
+describe('daysRemaining / daysBorrowed', () => {
+  it('counts calendar days to the expected age', () => {
+    // 18 Sep 2026 to 12 May 2074: 48 years (17,532 days) less 129 days.
+    expect(daysRemaining(profile, new Date(2026, 8, 18, 12))).toBe(17403)
+    expect(daysRemaining(profile, new Date(2074, 4, 10, 23))).toBe(2)
   })
 
-  it('clamps out-of-range fractions', () => {
-    expect(lifeAsTimeOfDay(-1)).toEqual({ hours: 0, minutes: 0 })
-    expect(lifeAsTimeOfDay(2)).toEqual({ hours: 24, minutes: 0 })
+  it('reaches zero on the day itself, and never goes negative', () => {
+    expect(daysRemaining(profile, new Date(2074, 4, 12))).toBe(0)
+    expect(daysRemaining(profile, new Date(2080, 0, 1))).toBe(0)
   })
-})
 
-describe('formatTimeOfDay', () => {
-  it.each([
-    [0, 0, '12:00 AM'],
-    [10, 12, '10:12 AM'],
-    [12, 0, '12:00 PM'],
-    [13, 5, '1:05 PM'],
-    [23, 59, '11:59 PM'],
-    [24, 0, '12:00 AM'],
-  ])('formats %i:%i as %s', (hours, minutes, expected) => {
-    expect(formatTimeOfDay({ hours, minutes })).toBe(expected)
+  it('counts days borrowed only once the expected age has passed', () => {
+    expect(daysBorrowed(profile, new Date(2074, 4, 11))).toBe(0)
+    expect(daysBorrowed(profile, new Date(2074, 4, 12))).toBe(0)
+    expect(daysBorrowed(profile, new Date(2074, 4, 15, 9))).toBe(3)
   })
 })
 

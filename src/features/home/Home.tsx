@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { hasArrived, isUnread } from '../../domain/letters'
 import {
-  formatTimeOfDay,
+  daysBorrowed,
+  daysRemaining,
   isBorrowedTime,
-  lifeAsTimeOfDay,
-  lifeFraction,
   type Profile,
 } from '../../domain/life'
 import type { WeekEntries } from '../../domain/ritual'
@@ -39,6 +38,10 @@ interface Props {
   /** A week that was just named, shown briefly as it settles into the sand. */
   settled?: SettledWeek | null
 }
+
+/** "1 day", "17,403 days" */
+const countDays = (days: number) =>
+  `${days.toLocaleString('en')} ${days === 1 ? 'day' : 'days'}`
 
 const fadingText = (shown: boolean) =>
   cn(
@@ -148,14 +151,9 @@ export function Home({ profile, firstWeek, entries, now, settled }: Props) {
       <div className="absolute inset-x-4 bottom-[max(2rem,env(safe-area-inset-bottom))] text-center">
         {/* Always in the accessibility tree; only its visibility changes. */}
         <p className={cn('text-2xl font-light', fadingText(revealed))}>
-          {isBorrowedTime(profile, now) ? (
-            'Every week now is borrowed.'
-          ) : (
-            <>
-              {formatTimeOfDay(lifeAsTimeOfDay(lifeFraction(profile, now)))}{' '}
-              <span className="text-muted">of your life</span>
-            </>
-          )}
+          {isBorrowedTime(profile, now)
+            ? `Every week now is borrowed · ${countDays(daysBorrowed(profile, now))} so far`
+            : `${countDays(daysRemaining(profile, now))} left`}
         </p>
         <button
           type="button"

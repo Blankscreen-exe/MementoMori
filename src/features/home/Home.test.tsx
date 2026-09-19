@@ -28,7 +28,7 @@ function renderAt(now: Date, p = profile, settled?: SettledWeek) {
 }
 
 const glass = () => screen.getByRole('button', { name: /hourglass/i })
-const timeOfLife = () => screen.getByText(/of your life/).parentElement!
+const daysLeft = () => screen.getByText(/days? (left|so far)/)
 
 describe('Home', () => {
   it('describes the hourglass for screen readers', () => {
@@ -48,16 +48,17 @@ describe('Home', () => {
     expect(useAppStore.getState().hasTouchedGlass).toBe(true)
   })
 
-  it('reveals life as a time of day on touch, then fades it away', () => {
+  it('reveals the days left on touch, then fades them away', () => {
     renderAt(new Date(2034, 4, 12))
-    expect(timeOfLife()).toHaveTextContent('12:00 PM of your life')
-    expect(timeOfLife()).toHaveClass('opacity-0')
+    // 12 May 2034 to 12 May 2074: 40 years, 10 of them leap years.
+    expect(daysLeft()).toHaveTextContent('14,610 days left')
+    expect(daysLeft()).toHaveClass('opacity-0')
 
     fireEvent.click(glass())
-    expect(timeOfLife()).toHaveClass('opacity-100')
+    expect(daysLeft()).toHaveClass('opacity-100')
 
     act(() => vi.advanceTimersByTime(REVEAL_MS))
-    expect(timeOfLife()).toHaveClass('opacity-0')
+    expect(daysLeft()).toHaveClass('opacity-0')
   })
 
   it('restarts the fade-out timer on every touch', () => {
@@ -66,12 +67,15 @@ describe('Home', () => {
     act(() => vi.advanceTimersByTime(REVEAL_MS - 500))
     fireEvent.click(glass())
     act(() => vi.advanceTimersByTime(REVEAL_MS - 500))
-    expect(timeOfLife()).toHaveClass('opacity-100')
+    expect(daysLeft()).toHaveClass('opacity-100')
   })
 
   it('switches to borrowed time past the expected age', () => {
     renderAt(new Date(2030, 0, 1), { birthDate: '1950-01-01', expectedAge: 70 })
-    expect(screen.getByText('Every week now is borrowed.')).toBeInTheDocument()
+    // 1 Jan 2020 to 1 Jan 2030, with three leap years.
+    expect(
+      screen.getByText('Every week now is borrowed · 3,653 days so far'),
+    ).toBeInTheDocument()
     expect(glass()).toHaveAccessibleName(
       'An hourglass that has run out. Every week now is borrowed.',
     )
@@ -92,11 +96,11 @@ describe('Home', () => {
       expect(screen.getByText('Touch the glass.')).toHaveClass('opacity-100')
     })
 
-    it('gives way to the time of day on touch', () => {
+    it('gives way to the days left on touch', () => {
       renderAt(new Date(2026, 8, 20, 21), profile, settled)
       fireEvent.click(glass())
       expect(screen.getByRole('status')).toHaveClass('opacity-0')
-      expect(timeOfLife()).toHaveClass('opacity-100')
+      expect(daysLeft()).toHaveClass('opacity-100')
     })
   })
 
