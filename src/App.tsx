@@ -26,9 +26,9 @@ function App() {
     return (
       <Ritual
         now={now}
-        onKeep={(name, color) => {
-          if (recordWeek(week, { outcome: 'named', name, color }, new Date())) {
-            setSettled({ name, color })
+        onKeep={(name) => {
+          if (recordWeek(week, { outcome: 'named', name }, new Date())) {
+            setSettled({ name })
           }
           // If Sunday ended mid-answer, this moves the app on to Monday.
           refreshNow()

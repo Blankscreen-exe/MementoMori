@@ -26,24 +26,16 @@ describe('Ritual', () => {
     expect(nameInput()).toHaveAttribute('placeholder', 'a few words')
   })
 
-  it('offers the ten strata colors as a radio group, none preselected', () => {
+  it('offers no color choice: every week becomes the same white sand', () => {
     setup()
-    const colors = screen.getAllByRole('radio')
-    expect(colors).toHaveLength(10)
-    expect(colors.every((radio) => !(radio as HTMLInputElement).checked)).toBe(
-      true,
-    )
-    expect(screen.getByRole('radio', { name: 'Ember' })).toBeInTheDocument()
+    expect(screen.queryAllByRole('radio')).toHaveLength(0)
   })
 
-  it('needs both a name and a color before it can be kept', async () => {
+  it('needs a name before it can be kept', async () => {
     const { user } = setup()
     expect(keepButton()).toBeDisabled()
 
     await user.type(nameInput(), 'moved')
-    expect(keepButton()).toBeDisabled()
-
-    await user.click(screen.getByRole('radio', { name: 'Tide' }))
     expect(keepButton()).toBeEnabled()
 
     await user.clear(nameInput())
@@ -51,19 +43,17 @@ describe('Ritual', () => {
     expect(keepButton()).toBeDisabled()
   })
 
-  it('keeps a tidied name with its color', async () => {
+  it('keeps a tidied name', async () => {
     const { onKeep, user } = setup()
     await user.type(nameInput(), '  moved   to Lisbon ')
-    await user.click(screen.getByRole('radio', { name: 'Tide' }))
     await user.click(keepButton())
-    expect(onKeep).toHaveBeenCalledWith('moved to Lisbon', 'tide')
+    expect(onKeep).toHaveBeenCalledWith('moved to Lisbon')
   })
 
   it('keeps the week with the Enter key', async () => {
     const { onKeep, user } = setup()
-    await user.click(screen.getByRole('radio', { name: 'Moss' }))
     await user.type(nameInput(), 'quiet{Enter}')
-    expect(onKeep).toHaveBeenCalledWith('quiet', 'moss')
+    expect(onKeep).toHaveBeenCalledWith('quiet')
   })
 
   it('limits names to 40 characters', () => {
