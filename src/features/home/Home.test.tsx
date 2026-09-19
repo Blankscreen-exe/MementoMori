@@ -78,13 +78,12 @@ describe('Home', () => {
   })
 
   describe('after the ritual', () => {
-    const settled: SettledWeek = { name: 'moved to Lisbon', color: 'tide' }
+    const settled: SettledWeek = { name: 'moved to Lisbon' }
 
-    it('shows the new name in its color while it settles', () => {
+    it('shows the new name while it settles', () => {
       renderAt(new Date(2026, 8, 20, 21), profile, settled)
       const status = screen.getByRole('status')
       expect(status).toHaveTextContent('moved to Lisbon')
-      expect(status).toHaveStyle({ color: 'var(--mm-tide)' })
       expect(status).toHaveClass('opacity-100')
       expect(screen.getByText('Touch the glass.')).toHaveClass('opacity-0')
 

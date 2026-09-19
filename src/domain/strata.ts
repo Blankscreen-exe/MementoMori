@@ -1,6 +1,5 @@
 import { addWeeks } from 'date-fns'
 import { birthOf, type Profile } from './life'
-import type { StrataColor } from './palette'
 import { weekStatus, type RitualContext } from './ritual'
 import { weekKeyOf, weekStartOfKey } from './week'
 
@@ -9,7 +8,6 @@ export type LayerKind =
 
 export interface Layer {
   kind: LayerKind
-  color?: StrataColor
   /** Position within the lived pile: 0 is birth, 1 is now. */
   start: number
   end: number
@@ -18,7 +16,7 @@ export interface Layer {
 /**
  * Builds the sediment in the bottom bulb, oldest layer first. Each layer's
  * thickness is proportional to the time it covers, and neighbouring weeks
- * with the same look are merged into a single layer.
+ * with the same outcome are merged into a single layer.
  */
 export function buildStrata(profile: Profile, context: RitualContext): Layer[] {
   const birth = birthOf(profile).getTime()
@@ -28,19 +26,14 @@ export function buildStrata(profile: Profile, context: RitualContext): Layer[] {
   const toFraction = (time: number) => (time - birth) / (now - birth)
   const layers: Layer[] = []
 
-  const push = (
-    kind: LayerKind,
-    from: number,
-    to: number,
-    color?: StrataColor,
-  ) => {
+  const push = (kind: LayerKind, from: number, to: number) => {
     if (to <= from) return
     const last = layers.at(-1)
-    if (last && last.kind === kind && last.color === color) {
+    if (last && last.kind === kind) {
       last.end = toFraction(to)
       return
     }
-    layers.push({ kind, color, start: toFraction(from), end: toFraction(to) })
+    layers.push({ kind, start: toFraction(from), end: toFraction(to) })
   }
 
   const recordedStart = Math.max(
@@ -54,12 +47,10 @@ export function buildStrata(profile: Profile, context: RitualContext): Layer[] {
     const key = weekKeyOf(new Date(weekStart))
     const weekEnd = addWeeks(weekStartOfKey(key), 1).getTime()
     const status = weekStatus(key, context)
-    const entry = context.entries[key]
-    const color = entry?.outcome === 'named' ? entry.color : undefined
 
     // Every week in this loop is recorded and has started, so neither case occurs.
     if (status !== 'unrecorded' && status !== 'future') {
-      push(status, weekStart, Math.min(weekEnd, now), color)
+      push(status, weekStart, Math.min(weekEnd, now))
     }
     weekStart = weekEnd
   }

@@ -1,4 +1,3 @@
-import { STRATA_COLORS, type StrataColor } from '../../domain/palette'
 import type { Layer } from '../../domain/strata'
 import {
   glassOutline,
@@ -9,12 +8,12 @@ import {
 } from './geometry'
 
 export interface Palette {
+  canvas: string
   glass: string
   sand: string
   glint: string
   unrecorded: string
   missed: string
-  strata: Record<StrataColor, string>
 }
 
 /** Reads the theme's CSS variables, so the canvas matches the current mode. */
@@ -22,14 +21,12 @@ export function readPalette(root: Element = document.documentElement): Palette {
   const styles = getComputedStyle(root)
   const token = (name: string) => styles.getPropertyValue(`--mm-${name}`).trim()
   return {
+    canvas: token('canvas'),
     glass: token('glass'),
     sand: token('sand'),
     glint: token('glint'),
     unrecorded: token('unrecorded'),
     missed: token('missed'),
-    strata: Object.fromEntries(
-      STRATA_COLORS.map((color) => [color, token(color)]),
-    ) as Record<StrataColor, string>,
   }
 }
 
@@ -108,17 +105,16 @@ function pileBoundaryAt(scene: Scene, share: number, x: number): number {
 
 export function layerColor(layer: Layer, palette: Palette): string {
   switch (layer.kind) {
+    // Each outcome keeps its own theme token, even though the current theme
+    // paints all of them as the same white sand.
     case 'unrecorded':
       return palette.unrecorded
-    // A released week was let go on purpose, so it settles as plain sand.
-    // Grey is reserved for weeks that were never answered.
-    case 'current':
-    case 'released':
-      return palette.sand
-    case 'named':
-      return layer.color ? palette.strata[layer.color] : palette.sand
     case 'missed':
       return palette.missed
+    case 'current':
+    case 'released':
+    case 'named':
+      return palette.sand
   }
 }
 

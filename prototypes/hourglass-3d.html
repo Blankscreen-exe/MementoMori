@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hourglass 3D prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      html,
+      body {
+        height: 100%;
+        background: #000;
+        color: #fff;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+      }
+      body {
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+        cursor: grab;
+      }
+      canvas.dragging {
+        cursor: grabbing;
+      }
+      .panel {
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        bottom: max(16px, env(safe-area-inset-bottom));
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        letter-spacing: 0.04em;
+      }
+      .panel label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .panel input[type='range'] {
+        accent-color: #fff;
+        width: 130px;
+      }
+      .panel select,
+      .panel button {
+        font: inherit;
+        color: #fff;
+        background: #000;
+        border: 1px solid #fff;
+        border-radius: 999px;
+        padding: 4px 12px;
+      }
+      .title {
+        position: fixed;
+        top: 16px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 13px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="title">Prototype · drag it, or tilt your phone</p>
+    <canvas id="scene" aria-label="A low-poly hourglass"></canvas>
+    <div class="panel">
+      <label
+        >Lived <input id="lived" type="range" min="0" max="100" value="40" />
+        <span id="livedLabel">40%</span></label
+      >
+      <label
+        >Facets
+        <select id="facets">
+          <option value="6">6</option>
+          <option value="8">8</option>
+          <option value="12" selected>12</option>
+        </select>
+      </label>
+      <label
+        >Glass lines
+        <select id="lines">
+          <option value="contour" selected>Outline only</option>
+          <option value="all">All facets</option>
+        </select>
+      </label>
+      <label
+        >Line weight
+        <input id="weight" type="range" min="4" max="40" value="9" />
+        <span id="weightLabel">9</span></label
+      >
+      <label
+        >Plates <input id="plates" type="range" min="4" max="40" value="7" />
+        <span id="platesLabel">7</span></label
+      >
+      <button id="motion" type="button" hidden>Enable tilt</button>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from 'three'
+
+      // ---- The glass shape: the same profile the app uses, now spun into 3D. ----
+      const HALF = 1 // neck to either end
+      const MAX_R = 0.55
+      const NECK_R = 0.035
+      const radiusAt = (y) => {
+        const u = Math.min(Math.abs(y) / HALF, 1)
+        return (
+          NECK_R + (MAX_R - NECK_R) * Math.pow(Math.sin((u * Math.PI) / 2), 0.8)
+        )
+      }
+
+      // Volume of a bulb from the neck out to distance d, by numeric integration.
+      // Every cross-section is the same polygon, so volume is proportional to r².
+      const SAMPLES = 600
+      const cumulative = new Float64Array(SAMPLES + 1)
+      for (let i = 1; i <= SAMPLES; i++) {
+        const a = radiusAt(((i - 1) / SAMPLES) * HALF) ** 2
+        const b = radiusAt((i / SAMPLES) * HALF) ** 2
+        cumulative[i] = cumulative[i - 1] + ((a + b) / 2) * (HALF / SAMPLES)
+      }
+      const BULB = cumulative[SAMPLES]
+      function distanceForVolume(v) {
+        const target = Math.min(Math.max(v, 0), BULB)
+        let lo = 0,
+          hi = SAMPLES
+        while (lo < hi) {
+          const mid = (lo + hi) >> 1
+          if (cumulative[mid] < target) lo = mid + 1
+          else hi = mid
+        }
+        if (lo === 0) return 0
+        const span = cumulative[lo] - cumulative[lo - 1]
+        return (
+          ((lo - 1 + (span ? (target - cumulative[lo - 1]) / span : 0)) /
+            SAMPLES) *
+          HALF
+        )
+      }
+      // Sand surfaces in the glass's own coordinates (neck at y = 0).
+      const topLevel = (lived) => distanceForVolume((1 - lived) * BULB)
+      const pileLevel = (lived) => -distanceForVolume((1 - lived) * BULB)
+
+      // ---- Scene ----
+      const canvas = document.getElementById('scene')
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+      renderer.setClearColor(0x000000)
+      renderer.localClippingEnabled = true
+      const scene = new THREE.Scene()
+      const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100)
+      camera.position.set(0, 0.9, 7.2)
+      camera.lookAt(0, 0, 0)
+
+      // Bright ambient light, soft key light: faces turned away are only a little darker.
+      scene.add(new THREE.AmbientLight(0xffffff, 2.2))
+      const key = new THREE.DirectionalLight(0xffffff, 1.4)
+      key.position.set(3, 4, 5)
+      scene.add(key)
+
+      const hourglass = new THREE.Group()
+      scene.add(hourglass)
+
+      const white = new THREE.Color(0xffffff)
+      const solid = new THREE.MeshLambertMaterial({
+        color: white,
+        flatShading: true,
+      })
+      const line = new THREE.LineBasicMaterial({ color: white })
+      const stroke = new THREE.MeshBasicMaterial({
+        color: white,
+        side: THREE.DoubleSide,
+      })
+      // Sand ignores lighting: pure, flat white. Clipping keeps its surface level.
+      const topPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0)
+      const pilePlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0)
+      const topSandMaterial = new THREE.MeshBasicMaterial({
+        color: white,
+        side: THREE.DoubleSide,
+        clippingPlanes: [topPlane],
+      })
+      const pileSandMaterial = new THREE.MeshBasicMaterial({
+        color: white,
+        side: THREE.DoubleSide,
+        clippingPlanes: [pilePlane],
+      })
+
+      let parts = []
+      let plates = []
+      // Plate thickness, in the same units as the glass (its height is 2).
+      let plateThickness = 0.07
+      let allEdges = null
+      let contour = null
+
+      // ---- The contour: only the facet edges on the glass's outline ----
+      // An edge is on the outline when one of its two facets faces the camera and
+      // the other faces away. Which edges those are changes as the glass turns, so
+      // it's worked out again every frame.
+      let glassFaces = [] // { normal, center } per facet
+      let glassEdges = [] // { a, b, faces: [f1, f2] } per inner edge
+      function buildContour(facets, phase) {
+        const rings = profile(-HALF, HALF, 10)
+        // Same vertex layout as THREE.LatheGeometry, so the contour matches the sand.
+        const vertex = (i, j) => {
+          const phi = phase + ((i % facets) / facets) * Math.PI * 2
+          return new THREE.Vector3(
+            rings[j].x * Math.sin(phi),
+            rings[j].y,
+            rings[j].x * Math.cos(phi),
+          )
+        }
+        const face = (i, j) => j * facets + ((i + facets) % facets)
+        glassFaces = []
+        for (let j = 0; j < rings.length - 1; j++) {
+          for (let i = 0; i < facets; i++) {
+            const a = vertex(i, j),
+              b = vertex(i + 1, j),
+              c = vertex(i, j + 1),
+              d = vertex(i + 1, j + 1)
+            const center = a.clone().add(b).add(c).add(d).multiplyScalar(0.25)
+            const normal = new THREE.Vector3()
+              .subVectors(b, a)
+              .cross(new THREE.Vector3().subVectors(c, a))
+              .normalize()
+            // Point every normal outward, away from the glass's axis.
+            if (normal.x * center.x + normal.z * center.z < 0) normal.negate()
+            glassFaces.push({ normal, center })
+          }
+        }
+        glassEdges = []
+        for (let j = 0; j < rings.length - 1; j++) {
+          for (let i = 0; i < facets; i++) {
+            // Seams running up the glass, between neighbouring facets.
+            glassEdges.push({
+              a: vertex(i, j),
+              b: vertex(i, j + 1),
+              faces: [face(i - 1, j), face(i, j)],
+            })
+            // Rings around the glass, between the facets above and below.
+            if (j > 0)
+              glassEdges.push({
+                a: vertex(i, j),
+                b: vertex(i + 1, j),
+                faces: [face(i, j - 1), face(i, j)],
+              })
+          }
+        }
+      }
+
+      // ---- A glass-like stroke: the outline swells and thins ----
+      // Like an ink drawing of glass, the line is heaviest where the glass curves
+      // hardest (the neck and the rims) and on the side away from the light, and
+      // lightest along the long flanks on the lit side.
+      let lineWeight = 0.009
+      const smoothstep = (a, b, x) => {
+        const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
+        return t * t * (3 - 2 * t)
+      }
+      function strokeWidth(y, viewX) {
+        const neck = Math.exp(-((y / 0.28) ** 2))
+        const rim = Math.exp(-(((Math.abs(y) - HALF) / 0.2) ** 2))
+        const shadow = 1 - smoothstep(-0.15, 0.15, viewX) // the key light is to the right
+        return (
+          lineWeight * (0.25 + 1.8 * neck + 1.1 * rim) * (0.3 + 1.2 * shadow)
+        )
+      }
+
+      const cameraLocal = new THREE.Vector3()
+      const toCamera = new THREE.Vector3()
+      const toView = new THREE.Matrix4()
+      const viewPoint = new THREE.Vector3()
+      const dir = new THREE.Vector3()
+      const side = new THREE.Vector3()
+      const corner = new THREE.Vector3()
+      function updateContour() {
+        if (!contour || !contour.visible) return
+        cameraLocal.copy(camera.position)
+        hourglass.worldToLocal(cameraLocal)
+        toView.multiplyMatrices(
+          camera.matrixWorldInverse,
+          hourglass.matrixWorld,
+        )
+        const facing = glassFaces.map(
+          ({ normal, center }) =>
+            normal.dot(toCamera.subVectors(cameraLocal, center)) > 0,
+        )
+        const viewX = (v) => viewPoint.copy(v).applyMatrix4(toView).x
+        const positions = contour.geometry.attributes.position
+        let n = 0
+        const put = (v) => positions.setXYZ(n++, v.x, v.y, v.z)
+        for (const { a, b, faces } of glassEdges) {
+          if (facing[faces[0]] === facing[faces[1]]) continue
+          const wa = strokeWidth(a.y, viewX(a)) / 2
+          const wb = strokeWidth(b.y, viewX(b)) / 2
+          // A thin strip facing the camera, stretched a little past each end so
+          // neighbouring strips overlap without gaps at the joins.
+          dir.subVectors(b, a).normalize()
+          toCamera.subVectors(cameraLocal, a)
+          side.crossVectors(dir, toCamera).normalize()
+          const a0 = a
+            .clone()
+            .addScaledVector(dir, -wa)
+            .addScaledVector(side, wa)
+          const a1 = a
+            .clone()
+            .addScaledVector(dir, -wa)
+            .addScaledVector(side, -wa)
+          const b0 = b
+            .clone()
+            .addScaledVector(dir, wb)
+            .addScaledVector(side, wb)
+          const b1 = b
+            .clone()
+            .addScaledVector(dir, wb)
+            .addScaledVector(side, -wb)
+          put(a0)
+          put(a1)
+          put(b0)
+          put(b0)
+          put(a1)
+          put(b1)
+        }
+        positions.needsUpdate = true
+        contour.geometry.setDrawRange(0, n)
+      }
+
+      let lineMode = 'contour'
+      function applyLineMode() {
+        if (!allEdges || !contour) return
+        allEdges.visible = lineMode === 'all'
+        contour.visible = lineMode === 'contour'
+      }
+
+      function profile(from, to, steps, inset = 1) {
+        const points = []
+        for (let i = 0; i <= steps; i++) {
+          const y = from + ((to - from) * i) / steps
+          points.push(new THREE.Vector2(radiusAt(y) * inset, y))
+        }
+        return points
+      }
+
+      // The plates grow outward, so their inner faces always meet the glass's ends.
+      function applyPlateThickness() {
+        for (const plate of plates) {
+          plate.scale.y = plateThickness
+          plate.position.y = plate.userData.end * (HALF + plateThickness / 2)
+        }
+      }
+
+      function build(facets) {
+        parts.forEach((p) => {
+          hourglass.remove(p)
+          p.geometry.dispose()
+        })
+        parts = []
+        const add = (object) => {
+          hourglass.add(object)
+          parts.push(object)
+          return object
+        }
+        // Rotate every lathe so a facet faces the camera, not a seam.
+        const phase = Math.PI / facets
+
+        // The glass: every facet edge (for comparison), and a live contour.
+        const glass = new THREE.LatheGeometry(
+          profile(-HALF, HALF, 10),
+          facets,
+          phase,
+        )
+        allEdges = add(
+          new THREE.LineSegments(new THREE.EdgesGeometry(glass, 1), line),
+        )
+        glass.dispose()
+        buildContour(facets, phase)
+        contour = add(new THREE.Mesh(new THREE.BufferGeometry(), stroke))
+        contour.geometry.setAttribute(
+          'position',
+          new THREE.BufferAttribute(
+            new Float32Array(glassEdges.length * 18),
+            3,
+          ).setUsage(THREE.DynamicDrawUsage),
+        )
+        contour.frustumCulled = false
+        applyLineMode()
+
+        // The sand: each bulb's inside, cut off at a level surface.
+        add(
+          new THREE.Mesh(
+            new THREE.LatheGeometry(profile(0, HALF, 40, 0.97), facets, phase),
+            topSandMaterial,
+          ),
+        )
+        add(
+          new THREE.Mesh(
+            new THREE.LatheGeometry(profile(-HALF, 0, 40, 0.97), facets, phase),
+            pileSandMaterial,
+          ),
+        )
+
+        // The frame: two faceted plates joined by three pillars.
+        const plateR = MAX_R + 0.2
+        // Built one unit thick, then scaled, so the slider needs no rebuild.
+        plates = [1, -1].map((end) => {
+          const plate = add(
+            new THREE.Mesh(
+              new THREE.CylinderGeometry(plateR, plateR, 1, facets),
+              solid,
+            ),
+          )
+          plate.userData.end = end
+          plate.rotation.y = phase
+          return plate
+        })
+        applyPlateThickness()
+        for (let i = 0; i < 3; i++) {
+          const angle = (i / 3) * Math.PI * 2 + Math.PI / 6
+          const pillar = add(
+            new THREE.Mesh(
+              new THREE.CylinderGeometry(0.035, 0.035, 2 * HALF, 6),
+              solid,
+            ),
+          )
+          pillar.position.set(
+            Math.cos(angle) * (plateR - 0.09),
+            0,
+            Math.sin(angle) * (plateR - 0.09),
+          )
+        }
+      }
+
+      // ---- The falling stream ----
+      const grainGeometry = new THREE.SphereGeometry(0.012, 6, 4)
+      const grainMaterial = new THREE.MeshBasicMaterial({ color: white })
+      const grains = []
+      for (let i = 0; i < 24; i++) {
+        const grain = new THREE.Mesh(grainGeometry, grainMaterial)
+        grain.visible = false
+        grain.userData = { y: 0, v: 0, x: 0 }
+        hourglass.add(grain)
+        grains.push(grain)
+      }
+      let spawnTimer = 0
+
+      // ---- Motion: idle turntable, drag, device tilt ----
+      const MAX_TILT = THREE.MathUtils.degToRad(30)
+      const RESUME_AFTER = 2500 // ms of stillness before idling again
+      let spin = 0,
+        spinVelocity = 0.25 // radians per second while idle
+      let tiltX = 0,
+        tiltZ = 0,
+        targetX = 0,
+        targetZ = 0
+      let lastInteraction = -Infinity
+      let drag = null
+      let deviceTilt = null
+
+      canvas.addEventListener('pointerdown', (e) => {
+        canvas.setPointerCapture(e.pointerId)
+        canvas.classList.add('dragging')
+        drag = {
+          x: e.clientX,
+          y: e.clientY,
+          t: performance.now(),
+          tiltX: targetX,
+        }
+        lastInteraction = performance.now()
+      })
+      canvas.addEventListener('pointermove', (e) => {
+        if (!drag) return
+        const now = performance.now()
+        const dx = e.clientX - drag.x
+        spin += dx * 0.01
+        spinVelocity = ((dx * 0.01) / Math.max(1, now - drag.t)) * 1000
+        targetX = THREE.MathUtils.clamp(
+          drag.tiltX + (e.clientY - drag.y) * 0.005,
+          -MAX_TILT,
+          MAX_TILT,
+        )
+        drag.x = e.clientX
+        drag.t = now
+        lastInteraction = now
+      })
+      const endDrag = () => {
+        drag = null
+        canvas.classList.remove('dragging')
+        lastInteraction = performance.now()
+      }
+      canvas.addEventListener('pointerup', endDrag)
+      canvas.addEventListener('pointercancel', endDrag)
+
+      function onOrientation(e) {
+        if (e.beta == null || e.gamma == null) return
+        // Holding a phone upright is about 60°; lean relative to that.
+        deviceTilt = {
+          x: THREE.MathUtils.clamp(
+            THREE.MathUtils.degToRad(e.beta - 60) * 0.6,
+            -MAX_TILT,
+            MAX_TILT,
+          ),
+          z: THREE.MathUtils.clamp(
+            THREE.MathUtils.degToRad(-e.gamma) * 0.6,
+            -MAX_TILT,
+            MAX_TILT,
+          ),
+        }
+        lastInteraction = performance.now()
+      }
+      const motionButton = document.getElementById('motion')
+      if (
+        typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function'
+      ) {
+        motionButton.hidden = false
+        motionButton.addEventListener('click', async () => {
+          try {
+            if (
+              (await DeviceOrientationEvent.requestPermission()) === 'granted'
+            ) {
+              addEventListener('deviceorientation', onOrientation)
+              motionButton.hidden = true
+            }
+          } catch {}
+        })
+      } else {
+        addEventListener('deviceorientation', onOrientation)
+      }
+
+      // ---- Controls ----
+      let lived = 0.4
+      const livedInput = document.getElementById('lived')
+      livedInput.addEventListener('input', () => {
+        lived = livedInput.value / 100
+        document.getElementById('livedLabel').textContent =
+          `${livedInput.value}%`
+      })
+      document
+        .getElementById('facets')
+        .addEventListener('change', (e) => build(Number(e.target.value)))
+      document.getElementById('weight').addEventListener('input', (e) => {
+        lineWeight = e.target.value / 1000
+        document.getElementById('weightLabel').textContent = e.target.value
+      })
+      document.getElementById('plates').addEventListener('input', (e) => {
+        plateThickness = e.target.value / 100
+        document.getElementById('platesLabel').textContent = e.target.value
+        applyPlateThickness()
+      })
+      document.getElementById('lines').addEventListener('change', (e) => {
+        lineMode = e.target.value
+        applyLineMode()
+      })
+
+      function resize() {
+        const { clientWidth: w, clientHeight: h } = canvas
+        renderer.setSize(w, h, false)
+        camera.aspect = w / h
+        // Keep the whole hourglass in view on narrow screens.
+        camera.position.z = w / h < 0.6 ? 7.2 / (w / h / 0.6) : 7.2
+        camera.updateProjectionMatrix()
+      }
+      addEventListener('resize', resize)
+
+      // ---- Loop ----
+      const up = new THREE.Vector3()
+      const point = new THREE.Vector3()
+      let last = performance.now()
+      function frame(now) {
+        const dt = Math.min(now - last, 50) / 1000
+        last = now
+        const t = now / 1000
+        const idle = !drag && now - lastInteraction > RESUME_AFTER
+
+        // Spin: coast after a flick, settle back to a slow turntable when idle.
+        if (!drag) {
+          const idleSpeed = 0.25
+          spinVelocity +=
+            ((idle ? idleSpeed : spinVelocity * 0.96) - spinVelocity) *
+            Math.min(1, dt * 2)
+          spin += spinVelocity * dt
+        }
+        // Tilt: the device or a drag leans it; idle, it sways gently.
+        if (deviceTilt && !drag) {
+          targetX = deviceTilt.x
+          targetZ = deviceTilt.z
+        } else if (idle) {
+          targetX = Math.sin(t * 0.4) * 0.07
+          targetZ = Math.sin(t * 0.3) * 0.05
+        }
+        tiltX += (targetX - tiltX) * Math.min(1, dt * 4)
+        tiltZ += (targetZ - tiltZ) * Math.min(1, dt * 4)
+        hourglass.rotation.set(tiltX, spin, tiltZ, 'XZY')
+        hourglass.updateMatrixWorld()
+
+        // Keep each sand surface level in the world, at its measured height.
+        point.set(0, topLevel(lived), 0).applyMatrix4(hourglass.matrixWorld)
+        topPlane.constant = point.y
+        point.set(0, pileLevel(lived), 0).applyMatrix4(hourglass.matrixWorld)
+        pilePlane.constant = point.y
+        const pileTop = pileLevel(lived)
+
+        // Stream: grains fall from the neck to the pile while any sand remains.
+        spawnTimer -= dt
+        if (lived < 1 && spawnTimer <= 0) {
+          spawnTimer = 0.06
+          const g = grains.find((grain) => !grain.visible)
+          if (g) {
+            g.visible = true
+            g.userData = { y: -0.02, v: 0.2, x: (Math.random() - 0.5) * 0.02 }
+          }
+        }
+        for (const g of grains) {
+          if (!g.visible) continue
+          g.userData.v += 3.5 * dt
+          g.userData.y -= g.userData.v * dt
+          g.position.set(g.userData.x, g.userData.y, 0)
+          if (g.userData.y < pileTop) g.visible = false
+        }
+
+        updateContour()
+        renderer.render(scene, camera)
+        requestAnimationFrame(frame)
+      }
+
+      build(12)
+      resize()
+      requestAnimationFrame(frame)
+    </script>
+  </body>
+</html>

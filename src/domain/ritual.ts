@@ -1,11 +1,9 @@
 import { isSunday } from 'date-fns'
-import type { StrataColor } from './palette'
 import { weekKeyOf, type WeekKey } from './week'
 
 /** The final outcome of a week's ritual. Once recorded, it never changes. */
 export type WeekEntry =
-  | { outcome: 'named'; name: string; color: StrataColor }
-  | { outcome: 'released' }
+  { outcome: 'named'; name: string } | { outcome: 'released' }
 
 export type WeekEntries = Readonly<Record<WeekKey, WeekEntry>>
 

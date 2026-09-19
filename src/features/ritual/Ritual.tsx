@@ -1,6 +1,5 @@
 import { format } from 'date-fns'
 import { useState, type FormEvent } from 'react'
-import { STRATA_COLORS, type StrataColor } from '../../domain/palette'
 import {
   MAX_WEEK_NAME_LENGTH,
   normalizeWeekName,
@@ -12,24 +11,21 @@ import { fadeClass, useFade } from '../../ui/fade'
 
 interface Props {
   now: Date
-  onKeep: (name: string, color: StrataColor) => void
+  onKeep: (name: string) => void
   onRelease: () => void
 }
-
-const capitalize = (value: string) => value[0].toUpperCase() + value.slice(1)
 
 /** The Sunday prompt. Blocks the app until the week is named or let go. */
 export function Ritual({ now, onKeep, onRelease }: Props) {
   const [name, setName] = useState('')
-  const [color, setColor] = useState<StrataColor | null>(null)
   const { visible, fadeOutThen } = useFade()
 
-  const canKeep = validateWeekName(name) === null && color !== null
+  const canKeep = validateWeekName(name) === null
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
     if (!canKeep) return
-    fadeOutThen(() => onKeep(normalizeWeekName(name), color))
+    fadeOutThen(() => onKeep(normalizeWeekName(name)))
   }
 
   return (
@@ -57,30 +53,6 @@ export function Ritual({ now, onKeep, onRelease }: Props) {
           enterKeyHint="done"
           className="mt-10 w-full rounded-none border-b border-line bg-transparent py-2 text-2xl font-light outline-none placeholder:text-muted/50 focus:border-ink"
         />
-
-        <fieldset className="mt-8">
-          <legend className="sr-only">Choose its color</legend>
-          <div className="flex flex-wrap gap-3">
-            {STRATA_COLORS.map((option) => (
-              <label key={option} className="cursor-pointer">
-                <input
-                  type="radio"
-                  name="color"
-                  value={option}
-                  checked={color === option}
-                  onChange={() => setColor(option)}
-                  aria-label={capitalize(option)}
-                  className="peer sr-only"
-                />
-                <span
-                  aria-hidden
-                  style={{ backgroundColor: `var(--mm-${option})` }}
-                  className="block size-7 rounded-full outline-offset-3 peer-checked:outline-1 peer-checked:outline-ink peer-focus-visible:outline-1 peer-focus-visible:outline-muted"
-                />
-              </label>
-            ))}
-          </div>
-        </fieldset>
 
         <div className="mt-auto flex flex-col gap-2 pt-10">
           <Button type="submit" disabled={!canKeep}>

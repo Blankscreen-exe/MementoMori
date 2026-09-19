@@ -94,14 +94,12 @@ describe('App', () => {
         screen.getByRole('textbox', { name: 'Name this week' }),
         'moved to Lisbon',
       )
-      await user.click(screen.getByRole('radio', { name: 'Tide' }))
       await user.click(screen.getByRole('button', { name: 'Keep it' }))
 
       expect(useAppStore.getState().entries).toEqual({
         '2026-09-20': {
           outcome: 'named',
           name: 'moved to Lisbon',
-          color: 'tide',
         },
       })
       expect(screen.getByRole('status')).toHaveTextContent('moved to Lisbon')
@@ -145,7 +143,6 @@ describe('App', () => {
         screen.getByRole('textbox', { name: 'Name this week' }),
         'too late',
       )
-      await user.click(screen.getByRole('radio', { name: 'Ember' }))
       act(() => vi.setSystemTime(new Date(2026, 8, 21, 0, 0, 10)))
       await user.click(screen.getByRole('button', { name: 'Keep it' }))
 

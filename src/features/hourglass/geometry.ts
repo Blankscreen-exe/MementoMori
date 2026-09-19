@@ -51,12 +51,20 @@ export function createGlass(boxWidth: number, boxHeight: number): Glass {
 
 type Shape = Pick<Glass, 'halfHeight' | 'maxHalfWidth' | 'neckHalfWidth'>
 
+/**
+ * The glass's curve, shared by the 2D and 3D hourglasses: 0 at the neck,
+ * rising to 1 at either end, where `u` runs from the neck (0) to an end (1).
+ */
+export function widening(u: number): number {
+  return Math.pow(Math.sin((Math.min(Math.abs(u), 1) * Math.PI) / 2), 0.8)
+}
+
 /** Half-width of the glass at a given distance from the neck. */
 function profileHalfWidth(shape: Shape, distance: number): number {
-  const u = Math.min(Math.abs(distance) / shape.halfHeight, 1)
-  const widening = Math.pow(Math.sin((u * Math.PI) / 2), 0.8)
+  const u = distance / shape.halfHeight
   return (
-    shape.neckHalfWidth + (shape.maxHalfWidth - shape.neckHalfWidth) * widening
+    shape.neckHalfWidth +
+    (shape.maxHalfWidth - shape.neckHalfWidth) * widening(u)
   )
 }
 

@@ -1,21 +1,15 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { remainingShareOf, type Letter } from '../../domain/letters'
-import {
-  isBorrowedTime,
-  lifeFraction,
-  weeksRemaining,
-  type Profile,
-} from '../../domain/life'
+import type { Letter } from '../../domain/letters'
+import { lifeFraction, type Profile } from '../../domain/life'
 import type { WeekEntries } from '../../domain/ritual'
 import { buildStrata } from '../../domain/strata'
 import type { WeekKey } from '../../domain/week'
+import { describeHourglass, sealedSparks } from './describe'
 import { createGlass } from './geometry'
 import {
   advanceStream,
   drawHourglass,
   readPalette,
-  seedOf,
-  type Glint,
   type Grain,
   type Scene,
 } from './render'
@@ -48,11 +42,7 @@ export function Hourglass({
     [profile, firstWeek, entries, now],
   )
   const glints = useMemo(
-    () =>
-      letters.flatMap((letter): Glint[] => {
-        const share = remainingShareOf(letter, profile, now)
-        return share === null ? [] : [{ share, seed: seedOf(letter.id) }]
-      }),
+    () => sealedSparks(letters, profile, now),
     [letters, profile, now],
   )
 
@@ -159,9 +149,7 @@ export function Hourglass({
     }
   }, [tiltTarget])
 
-  const description = isBorrowedTime(profile, now)
-    ? 'An hourglass that has run out. Every week now is borrowed.'
-    : `An hourglass. ${Math.round(lived * 100)}% of your expected life has passed, and about ${weeksRemaining(profile, now).toLocaleString('en')} weeks remain.${glints.length > 0 ? ' Something glints in the sand.' : ''}`
+  const description = describeHourglass(profile, now, glints.length)
 
   return (
     <canvas

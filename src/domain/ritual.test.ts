@@ -11,7 +11,7 @@ import {
 
 const SUNDAY = new Date(2026, 8, 20, 10)
 const named: WeekEntries = {
-  '2026-09-20': { outcome: 'named', name: 'moved', color: 'tide' },
+  '2026-09-20': { outcome: 'named', name: 'moved' },
 }
 const released: WeekEntries = { '2026-09-20': { outcome: 'released' } }
 
