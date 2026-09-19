@@ -15,7 +15,7 @@ import { fadeClass, useFade } from '../../ui/fade'
 import { Sheet } from '../../ui/Sheet'
 import { useBackToClose } from '../../ui/useBackToClose'
 import { Counters } from '../counters/Counters'
-import { Hourglass } from '../hourglass/Hourglass'
+import { HourglassView } from '../hourglass/HourglassView'
 import { requestTiltPermission } from '../hourglass/tilt'
 import { LetterList } from '../letters/LetterList'
 import { WriteLetter } from '../letters/WriteLetter'
@@ -136,7 +136,7 @@ export function Home({ profile, firstWeek, entries, now, settled }: Props) {
         onClick={handleTouch}
         className="h-[min(68dvh,46rem)] w-full max-w-xl cursor-pointer rounded-3xl outline-none focus-visible:outline-1 focus-visible:outline-offset-8 focus-visible:outline-line"
       >
-        <Hourglass
+        <HourglassView
           profile={profile}
           firstWeek={firstWeek}
           entries={entries}
