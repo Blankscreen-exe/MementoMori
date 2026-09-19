@@ -13,6 +13,7 @@ import {
   validateLetterBody,
   type Letter,
 } from '../domain/letters'
+import { draw, type Deck } from '../domain/deck'
 import type { Profile } from '../domain/life'
 import { canAnswer, type WeekEntries, type WeekEntry } from '../domain/ritual'
 import { weekKeyOf, type WeekKey } from '../domain/week'
@@ -38,6 +39,8 @@ export interface PersistedState {
   counters: CustomCounter[]
   /** Built-in counters the user chose to hide. */
   hiddenCounters: BuiltInCounter[]
+  /** Where the launch reflections are up to, so none repeats too soon. */
+  reflections: Deck | null
 }
 
 interface Actions {
@@ -60,6 +63,8 @@ interface Actions {
   updateCounter: (id: string, input: CounterInput, now: Date) => boolean
   deleteCounter: (id: string) => void
   setCounterHidden: (counter: BuiltInCounter, hidden: boolean) => void
+  /** Takes the next of `count` reflections from the shuffled deck. */
+  drawReflection: (count: number) => number
 }
 
 export type AppState = PersistedState & Actions
@@ -73,6 +78,7 @@ export const initialState: PersistedState = {
   hasReceivedLetter: false,
   counters: [],
   hiddenCounters: [],
+  reflections: null,
 }
 
 export const useAppStore = create<AppState>()(
@@ -144,6 +150,11 @@ export const useAppStore = create<AppState>()(
             ? [...new Set([...hiddenCounters, counter])]
             : hiddenCounters.filter((kind) => kind !== counter),
         })),
+      drawReflection: (count) => {
+        const { index, deck } = draw(get().reflections, count)
+        set({ reflections: deck })
+        return index
+      },
     }),
     {
       name: STORAGE_KEY,
@@ -159,6 +170,7 @@ export const useAppStore = create<AppState>()(
         hasReceivedLetter,
         counters,
         hiddenCounters,
+        reflections,
       }): PersistedState => ({
         profile,
         firstWeek,
@@ -168,6 +180,7 @@ export const useAppStore = create<AppState>()(
         hasReceivedLetter,
         counters,
         hiddenCounters,
+        reflections,
       }),
     },
   ),

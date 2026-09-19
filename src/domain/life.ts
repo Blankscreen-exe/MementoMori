@@ -1,4 +1,10 @@
-import { addYears, differenceInWeeks, isValid, parseISO } from 'date-fns'
+import {
+  addYears,
+  differenceInCalendarDays,
+  differenceInWeeks,
+  isValid,
+  parseISO,
+} from 'date-fns'
 
 export const MIN_EXPECTED_AGE = 1
 export const MAX_EXPECTED_AGE = 120
@@ -47,23 +53,14 @@ export function weeksRemaining(profile: Profile, now: Date): number {
   return Math.max(0, differenceInWeeks(expectedDeathOf(profile), now))
 }
 
-export interface TimeOfDay {
-  hours: number
-  minutes: number
+/** Calendar days from today until the expected age, never below zero. */
+export function daysRemaining(profile: Profile, now: Date): number {
+  return Math.max(0, differenceInCalendarDays(expectedDeathOf(profile), now))
 }
 
-/** Maps a life fraction onto a 24-hour day: 0.5 is noon. */
-export function lifeAsTimeOfDay(fraction: number): TimeOfDay {
-  const clamped = Math.min(1, Math.max(0, fraction))
-  const totalMinutes = Math.floor(clamped * 24 * 60)
-  return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 }
-}
-
-/** Formats a time of day as `10:12 AM`. The end of the day reads as midnight. */
-export function formatTimeOfDay({ hours, minutes }: TimeOfDay): string {
-  const period = hours < 12 || hours === 24 ? 'AM' : 'PM'
-  const displayHours = hours % 12 === 0 ? 12 : hours % 12
-  return `${displayHours}:${String(minutes).padStart(2, '0')} ${period}`
+/** Calendar days lived past the expected age: zero until it's reached. */
+export function daysBorrowed(profile: Profile, now: Date): number {
+  return Math.max(0, differenceInCalendarDays(now, expectedDeathOf(profile)))
 }
 
 export type BirthDateError = 'invalid' | 'future' | 'too-old'
