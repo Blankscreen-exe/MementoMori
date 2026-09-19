@@ -65,6 +65,43 @@ describe('App', () => {
     expect(useAppStore.getState().profile).toEqual(profile)
   })
 
+  describe('the launch reflection', () => {
+    const REFLECTION = 'Who haven’t you called in a while?'
+
+    it('comes first, then gives way to the hourglass', async () => {
+      setToday(FRIDAY)
+      onboarded()
+      const user = userEvent.setup()
+      render(<App launchReflection={REFLECTION} />)
+
+      expect(screen.getByText(REFLECTION)).toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: /hourglass/i }),
+      ).not.toBeInTheDocument()
+
+      await user.click(
+        screen.getByRole('button', { name: /called in a while/ }),
+      )
+      expect(screen.queryByText(REFLECTION)).not.toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /hourglass/i }),
+      ).toBeInTheDocument()
+    })
+
+    it('comes before the Sunday ritual', async () => {
+      setToday(SUNDAY)
+      onboarded()
+      const user = userEvent.setup()
+      render(<App launchReflection={REFLECTION} />)
+
+      expect(ritualHeading()).not.toBeInTheDocument()
+      await user.click(
+        screen.getByRole('button', { name: /called in a while/ }),
+      )
+      expect(ritualHeading()).toBeInTheDocument()
+    })
+  })
+
   describe('on Sunday', () => {
     it('opens the ritual instead of the hourglass', () => {
       setToday(SUNDAY)

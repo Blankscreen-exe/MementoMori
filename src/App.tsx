@@ -3,11 +3,17 @@ import { isRitualOpen } from './domain/ritual'
 import { weekKeyOf } from './domain/week'
 import { Home, type SettledWeek } from './features/home/Home'
 import { Onboarding } from './features/onboarding/Onboarding'
+import { Reflection } from './features/reflection/Reflection'
 import { Ritual } from './features/ritual/Ritual'
 import { useNow } from './hooks/useNow'
 import { useAppStore } from './storage/store'
 
-function App() {
+interface Props {
+  /** A reflection to show before anything else, once per launch. */
+  launchReflection?: string | null
+}
+
+function App({ launchReflection = null }: Props) {
   const [now, refreshNow] = useNow()
   const profile = useAppStore((state) => state.profile)
   const firstWeek = useAppStore((state) => state.firstWeek)
@@ -15,9 +21,15 @@ function App() {
   const completeOnboarding = useAppStore((state) => state.completeOnboarding)
   const recordWeek = useAppStore((state) => state.recordWeek)
   const [settled, setSettled] = useState<SettledWeek | null>(null)
+  const [reflection, setReflection] = useState(launchReflection)
 
   if (!profile || !firstWeek) {
     return <Onboarding onComplete={(p) => completeOnboarding(p, new Date())} />
+  }
+
+  // Each launch opens with a reflection, before the ritual or the hourglass.
+  if (reflection) {
+    return <Reflection text={reflection} onDone={() => setReflection(null)} />
   }
 
   // On Sunday, the ritual blocks the app until the week is named or let go.
