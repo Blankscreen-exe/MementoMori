@@ -13,7 +13,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "icons": "bun scripts/generate-icon.ts && pwa-assets-generator"
+    "icons": "bun scripts/render-icon.ts && pwa-assets-generator"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.3.0",
