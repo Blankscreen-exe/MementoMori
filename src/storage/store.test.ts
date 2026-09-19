@@ -45,6 +45,7 @@ describe('completeOnboarding', () => {
         hasReceivedLetter: false,
         counters: [],
         hiddenCounters: [],
+        reflections: null,
       },
     })
   })
@@ -221,5 +222,16 @@ describe('counters', () => {
     expect(useAppStore.getState().hiddenCounters).toEqual(['full-moons'])
     setCounterHidden('full-moons', false)
     expect(useAppStore.getState().hiddenCounters).toEqual([])
+  })
+})
+
+describe('drawReflection', () => {
+  it('walks through a shuffled deck and remembers its place', () => {
+    const { drawReflection } = useAppStore.getState()
+    const drawn = Array.from({ length: 5 }, () => drawReflection(5))
+    expect([...drawn].sort()).toEqual([0, 1, 2, 3, 4])
+
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
+    expect(stored.state.reflections).toMatchObject({ position: 5 })
   })
 })
