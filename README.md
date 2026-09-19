@@ -18,7 +18,7 @@ Most "life in weeks" apps show a static grid of 4,000 boxes. This one is a low-p
 - **Every Sunday, one chance.** On Sunday the app opens to a single question: _"This week will not come again. Name it, or let it go."_ Whatever you answer settles into the lower bulb as sand. Miss the Sunday and the week is gone.
 - **Letters to the future.** Write to a week years from now. Until then it's sealed: it can't be read, edited or even listed, and appears only as a black spark in the sand. When its week arrives, a quiet dot appears in the corner.
 - **What's left.** Counters turn abstract time into things you can picture, like 47 summers, 2,486 Sundays, or 51 more visits to your parents, drawn as dots when there are few enough to count.
-- **Life as one day.** Tap the glass: _"9:42 AM of your life."_
+- **The days left.** Tap the glass: _"17,403 days left."_
 
 <p align="center">
   <img src="docs/screenshots/onboarding.png" width="220" alt="Onboarding: 'When were you born?' with day, month and year fields" />

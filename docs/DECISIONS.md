@@ -78,7 +78,7 @@ Users can write a sealed note to a specific future week. The note glints as a gr
 
 ### A minimal home screen
 
-The home screen shows only the hourglass. Tapping it briefly reveals a single line of text (for example "10:12 AM of your life", which maps your lifespan onto a 24-hour day) and a menu, both of which fade away after a few seconds. A one-time hint after onboarding ("Touch the glass.") teaches the gesture without adding permanent UI.
+The home screen shows only the hourglass. Tapping it briefly reveals a single line of text and a menu, both of which fade away after a few seconds. The line counts the days left ("17,403 days left"), or, past the expected age, the days borrowed so far. It first mapped the lifespan onto a 24-hour day ("10:12 AM of your life"), which was poetic but had to be decoded; a plain count of days is immediate, and a day is a unit everyone feels. A one-time hint after onboarding ("Touch the glass.") teaches the gesture without adding permanent UI.
 
 ### One question per screen during onboarding
 
@@ -219,7 +219,7 @@ The code is split into layers:
 - **Geometry** (`geometry3d.ts`) is pure math: the glass shape, the volume calculations, the silhouette and the stroke widths, all unit-tested.
 - **Motion** (`motion.ts`) is pure too: the joystick-style lean, the 20° limit, the phone's tilt, the idle sway and the spring back upright.
 - **The scene** (`scene3d.ts`) turns a frame description (life lived, sparks, motion, time) into three.js objects. Colors are read from the theme's CSS variables.
-- **The component** (`Hourglass3D.tsx`) owns the animation loop, resizing, pausing, input and preferences. It keeps the latest data in a ref, so new data doesn't restart the loop, and it tells a tap (reveal the time of day) from a drag (lean the glass).
+- **The component** (`Hourglass3D.tsx`) owns the animation loop, resizing, pausing, input and preferences. It keeps the latest data in a ref, so new data doesn't restart the loop, and it tells a tap (reveal the days left) from a drag (lean the glass).
 
 Because a canvas is invisible to assistive technology, the same information is provided as text for screen readers ("40% of your expected life has passed, and about 2,486 weeks remain"), shared by both versions. The animation pauses while the tab is hidden. When the operating system asks for reduced motion, the same 3D hourglass is drawn once, still and upright. Browsers without WebGL get the original 2D canvas hourglass, which is kept for exactly that. iOS only reports device orientation after the user grants permission, so the app asks on the first tap of the glass, which is also when the hint retires.
 
